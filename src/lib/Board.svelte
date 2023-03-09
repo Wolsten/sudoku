@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { set_input_value } from 'svelte/internal';
 
 	type Cell = {
 		initialised: boolean;
@@ -38,6 +37,7 @@
 	let mode: Mode = Mode.EnterValue;
 	let selectMode: SelectMode = SelectMode.Single;
 	let selectedCell: SelectedCell = { row: -1, col: -1 };
+	let visible = false;
 
 	// -----------------------------------------------------------------------------
 	// @section State handling
@@ -94,6 +94,7 @@
 				}
 			});
 		});
+		visible = true;
 	}
 
 	function clearSelections() {
@@ -385,7 +386,7 @@
 
 <svelte:window on:resize={setCellHeight} on:keydown={handleKeydown} />
 
-<div class="board">
+<div class="board" class:visible>
 	<h1>Sudoku Board</h1>
 
 	<div class="col-header">
@@ -399,7 +400,7 @@
 
 	{#each grid as row, a}
 		<div class="row">
-			<span class="label"><span>{a + 1}</span></span>
+			<!-- <span class="label"><span>{a + 1}</span></span> -->
 			{#each row as cell, b}
 				{@const optionsString = cell.options ? cell.options.join(' ') : ''}
 				<span
@@ -411,7 +412,6 @@
 					class:selected={cell.selected}
 					class:initialised={cell.initialised}
 					class:error={cell.error}
-					style="flex-basis:{100 / COLS}%"
 					bind:this={cell.dom}
 					on:pointerdown={() => cellClicked(a, b)}
 				>
@@ -429,59 +429,80 @@
 		</div>
 	{/each}
 
-	<div class="controls">
-		<label
+	<div class="controls mode">
+		<label title="Use this mode to set up the starting values on the board"
 			>Initialise (i)
 			<input type="radio" name="mode" bind:group={mode} value={Mode.Initialise} />
 			<span class="checkmark" />
 		</label>
 
-		<label
+		<label title="Use this mode to add your (partial) solution to the board"
 			>Enter value(e)
 			<input type="radio" name="mode" bind:group={mode} value={Mode.EnterValue} />
 			<span class="checkmark" />
 		</label>
 
-		<label
+		<label title="Use this mode to pencil in possible values in each cell"
 			>Pencil in (p)
 			<input type="radio" name="mode" bind:group={mode} value={Mode.PencilIn} />
 			<span class="checkmark" />
 		</label>
 	</div>
 
-	<div class="controls">
-		<label
-			>Select single cells
+	<div class="controls select">
+		<label title="Only allow single cell selections"
+			>Single cells
 			<input type="radio" name="selectMode" bind:group={selectMode} value={SelectMode.Single} />
 			<span class="checkmark" />
 		</label>
 
-		<label
-			>Select multiple cells
+		<label title="Allow multiple cell selections and value entry plus pencil marks"
+			>Multiple cells
 			<input type="radio" name="selectMode" bind:group={selectMode} value={SelectMode.Multiple} />
 			<span class="checkmark" />
 		</label>
 	</div>
 
-	<div class="controls">
-		<button on:click={togglePairs}>Toggle pair (t)</button>
-		<button on:click={showConflicts}>Show conflicts (s)</button>
-		<button on:click={restart}>Restart (r)</button>
-		<button on:click={clearBoard}>Clear board (c)</button>
+	<div class="controls commands">
+		<button on:click={togglePairs} title="Where selected cells have only two options, mark these"
+			>Toggle pair (t)</button
+		>
+		<button on:click={showConflicts} title="Show conflicting cells in rows, columns and boxes"
+			>Show conflicts (s)</button
+		>
+		<button on:click={restart} title="Restart the puzzle, retaining initial puzzle setup"
+			>Restart (r)</button
+		>
+		<button on:click={clearBoard} title="Clear all data on the board">Clear board (c)</button>
 	</div>
 </div>
 
 <!------------------------------------------------------------------------------
+
 @section Styling
+
 -------------------------------------------------------------------------------->
 <style>
-	.board {
-		position: relative;
-		max-width: 600px;
+	.board * {
 		box-sizing: border-box;
 		font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode',
 			Geneva, Verdana, sans-serif;
-		--heavy: 5px;
+		/* Variables */
+	}
+
+	.board {
+		visibility: hidden;
+		position: relative;
+		max-width: 600px;
+
+		--heavy-lines: 5px;
+		--primary-colour: rgb(59, 113, 190);
+		--primary-colour-lighter: rgb(190, 212, 242);
+		--select-colour: rgb(161, 223, 176);
+	}
+
+	.board.visible {
+		visibility: visible;
 	}
 
 	h1 {
@@ -517,30 +538,31 @@
 		padding: 0;
 		border: 1px solid grey;
 		background-color: white;
+		flex-basis: calc(100% / 10);
 	}
 
 	.cell.initialised {
-		background-color: rgb(227, 236, 243);
+		background-color: var(--primary-colour-lighter);
 	}
 
 	.cell.selected {
-		background-color: green;
+		background-color: var(--select-colour);
 	}
 
 	.cell.top {
-		border-top-width: var(--heavy);
+		border-top-width: var(--heavy-lines);
 	}
 
 	.cell.bottom {
-		border-bottom-width: var(--heavy);
+		border-bottom-width: var(--heavy-lines);
 	}
 
 	.cell.left {
-		border-left-width: var(--heavy);
+		border-left-width: var(--heavy-lines);
 	}
 
 	.cell.right {
-		border-right-width: var(--heavy);
+		border-right-width: var(--heavy-lines);
 	}
 
 	.cell.error {
@@ -583,25 +605,47 @@
 
 	.controls {
 		margin-top: 1rem;
-		width: 100%;
+		width: 94%;
 		display: flex;
+		flex-wrap: wrap;
 		justify-content: space-around;
+		border: 1px solid grey;
+		border-radius: 0.3rem;
+		gap: 1rem;
+		padding: 1rem;
+		margin: 1rem 3%;
+		position: relative;
+	}
+
+	.controls::after {
+		position: absolute;
+		top: -0.8rem;
+		left: 1rem;
+		font-size: 0.8rem;
+		background: white;
+		padding: 0.3rem;
+	}
+
+	.controls.mode::after {
+		content: 'Mode';
+	}
+	.controls.select::after {
+		content: 'Select';
+	}
+	.controls.commands::after {
+		content: 'Commands';
 	}
 
 	.controls button {
-		background-color: palegoldenrod;
+		background-color: white;
 		padding: 0.3rem 0.6rem;
 		border: 1px solid grey;
 		border-radius: 0.2rem;
 	}
 
 	.controls button:hover {
-		background-color: rgb(170, 164, 102);
-	}
-
-	.controls button.active {
-		background-color: rgb(156, 68, 68);
-		color: white;
+		border-color: var(--primary-colour-lighter);
+		background-color: var(--primary-colour-lighter);
 	}
 
 	/* Customize the label (the container) */
@@ -645,6 +689,6 @@
 	/* When the radio button is checked, add a blue background */
 	label input:checked ~ .checkmark {
 		background-color: white;
-		border-color: #2196f3;
+		border-color: var(--primary-colour);
 	}
 </style>
