@@ -3,44 +3,82 @@
 	import { set_input_value } from 'svelte/internal';
 
 	type Cell = {
+		initialised: boolean;
 		value: number;
 		options: number[];
 		colours?: string[];
 		dom?: HTMLElement;
 		selected: boolean;
-		pointingPair: boolean;
+		paired: boolean;
+	};
+
+	enum Mode {
+		Initialise = 0,
+		EnterValue = 1,
+		PencilIn = 2
+	}
+
+	enum SelectMode {
+		Single = 0,
+		Multiple = 1
+	}
+
+	type SelectedCell = {
+		row: number;
+		col: number;
 	};
 
 	const ROWS = 9;
 	const COLS = 9;
 	const grid: Cell[][] = [];
 
-	// let shiftKey = false;
-	// let metaKey = false;
 	let lastClicked = 0;
+	let mode: Mode = Mode.EnterValue;
+	let selectMode: SelectMode = SelectMode.Single;
+	let selectedCell: SelectedCell = { row: -1, col: -1 };
 
-	// Key states
-	let initialise = false;
-	let pencilIn = false;
-	let enterValue = true;
-	let selectMultiple = false;
+	// -----------------------------------------------------------------------------
+	// @section State handling
+	// -----------------------------------------------------------------------------
 
-	for (let row = 0; row < ROWS; row++) {
-		grid[row] = [];
-		for (let col = 0; col < COLS; col++) {
-			grid[row][col] = {
-				value: 0,
-				selected: false,
-				options: [],
-				pointingPair: false
-			};
+	initialise();
 
-			if (row === 2 && col === 3) {
-				grid[row][col].options = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-			}
+	onMount(() => {
+		setCellHeight();
+	});
 
-			if ((row === 5 && col === 6) || (row === 7 && col === 2)) {
-				grid[row][col].value = 6;
+	$: switch (mode) {
+		case Mode.Initialise:
+			cellClicked(0, 0);
+			break;
+	}
+
+	$: if (selectMode === SelectMode.Single || SelectMode.Multiple) clearSelections();
+
+	// -----------------------------------------------------------------------------
+	// @section Functions
+	// -----------------------------------------------------------------------------
+
+	function initialise() {
+		for (let row = 0; row < ROWS; row++) {
+			grid[row] = [];
+			for (let col = 0; col < COLS; col++) {
+				grid[row][col] = {
+					value: 0,
+					selected: false,
+					options: [],
+					paired: false,
+					initialised: false
+				};
+
+				if (row === 2 && col === 3) {
+					grid[row][col].options = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+				}
+
+				if ((row === 5 && col === 6) || (row === 7 && col === 2)) {
+					grid[row][col].value = 6;
+					grid[row][col].initialised = true;
+				}
 			}
 		}
 	}
@@ -55,13 +93,29 @@
 		});
 	}
 
-	onMount(() => {
-		setCellHeight();
-	});
+	function clearSelections() {
+		grid.forEach((row, a) => {
+			row.forEach((cell, b) => {
+				grid[a][b].selected = false;
+			});
+		});
+	}
 
 	function clearCellBackgrounds() {
 		grid.forEach((row) => {
 			row.forEach((cell) => (cell.selected = false));
+		});
+	}
+
+	function clearSelectedEntries() {
+		grid.forEach((row, a) => {
+			row.forEach((cell, b) => {
+				if (cell.selected && cell.initialised === false) {
+					grid[a][b].value = 0;
+					grid[a][b].options = [];
+					grid[a][b].paired = false;
+				}
+			});
 		});
 	}
 
@@ -71,7 +125,8 @@
 				grid[a][b].value = 0;
 				grid[a][b].selected = false;
 				grid[a][b].options = [];
-				grid[a][b].pointingPair = false;
+				grid[a][b].paired = false;
+				grid[a][b].initialised = false;
 			});
 		});
 	}
@@ -79,7 +134,7 @@
 	function toggleOptions(num: number) {
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
-				if (cell.selected) {
+				if (cell.selected && cell.value === 0) {
 					let list = cell.options;
 					if (list.includes(num)) {
 						list = list.filter((option) => option !== num);
@@ -98,33 +153,59 @@
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
 				if (cell.selected) {
-					grid[a][b].value = num;
-					if (initialise) {
+					if (mode === Mode.Initialise || cell.initialised === false) {
+						grid[a][b].value = num;
+					}
+					if (mode === Mode.Initialise) {
 						setRow = a;
 						setCol = b;
 						grid[a][b].selected = false;
+						grid[a][b].initialised = true;
 					}
 				}
 			});
 		});
-
-		if (initialise) {
-			setCol++;
-			if (setCol === COLS) {
-				setCol = 0;
-				setRow++;
-				if (setRow === ROWS) setRow = 0;
-			}
-			grid[setRow][setCol].selected = true;
-		}
 	}
 
-	function togglePointingPairs() {
+	function moveSelection(key: string) {
+		if (selectedCell.row !== -1 && selectedCell.col !== -1) {
+			grid[selectedCell.row][selectedCell.col].selected = false;
+		}
+		switch (key) {
+			case 'ArrowRight':
+				selectedCell.col++;
+				if (selectedCell.col === COLS) {
+					selectedCell.col = 0;
+				}
+				break;
+			case 'ArrowLeft':
+				selectedCell.col--;
+				if (selectedCell.col === -1) {
+					selectedCell.col = COLS - 1;
+				}
+				break;
+			case 'ArrowDown':
+				selectedCell.row++;
+				if (selectedCell.row === ROWS) {
+					selectedCell.row = 0;
+				}
+				break;
+			case 'ArrowUp':
+				selectedCell.row--;
+				if (selectedCell.row === -1) {
+					selectedCell.row = ROWS - 1;
+				}
+				break;
+		}
+		grid[selectedCell.row][selectedCell.col].selected = true;
+	}
+
+	function togglePairs() {
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
 				if (cell.selected) {
 					if (cell.options.length === 2) {
-						grid[a][b].pointingPair = !cell.pointingPair;
+						grid[a][b].paired = !cell.paired;
 					}
 				}
 			});
@@ -151,36 +232,23 @@
 			}
 			return;
 		}
-		if (selectMultiple === false) clearCellBackgrounds();
+		if (selectMode === SelectMode.Single) clearCellBackgrounds();
 		grid[row][col].selected = true;
+		selectedCell = { row, col };
 		lastClicked = clickedAt;
 	}
 
-	function toggleInitialise() {
-		initialise = !initialise;
-		if (initialise) {
-			cellClicked(0, 0);
-			enterValue = false;
-		} else {
-			enterValue = true;
-		}
-		pencilIn = false;
-	}
-
-	function toggleEnterValue() {
-		enterValue = true;
-		pencilIn = false;
-		initialise = false;
-	}
-
-	function togglePencilIn() {
-		enterValue = false;
-		pencilIn = true;
-		initialise = false;
-	}
-
-	function toggleSelectMultiple() {
-		selectMultiple = !selectMultiple;
+	function restart() {
+		grid.forEach((row, a) => {
+			row.forEach((cell, b) => {
+				grid[a][b].selected = false;
+				if (cell.initialised === false) {
+					grid[a][b].value = 0;
+					grid[a][b].options = [];
+					grid[a][b].paired = false;
+				}
+			});
+		});
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
@@ -188,29 +256,43 @@
 
 		// Get the number from the key or the code
 		let num: number = Number(event.key);
-		// if (isNaN(num)) num = Number(event.code.replace('Digit', ''));
-		// if (isNaN(num)) num = -1;
 		console.log('Number', num);
-		// // Latch control keys
-		// if (event.key === 'Meta') metaKey = true;
-		// if (event.key === 'Shift') shiftKey = true;
-		// console.log('Shift key', shiftKey);
 
+		// Check none-numbers first
 		if (isNaN(num)) {
-			if (event.key === 't') {
-				togglePointingPairs();
-			} else if (event.key === 'i') {
-				toggleInitialise();
-			} else if (event.key === 'p') {
-				togglePencilIn();
-			} else if (event.key === 'e') {
-				toggleEnterValue();
+			switch (event.key) {
+				case 't':
+					togglePairs();
+					break;
+				case 'i':
+					mode = mode === Mode.Initialise ? Mode.EnterValue : Mode.Initialise;
+					break;
+				case 'p':
+					mode = Mode.PencilIn;
+					break;
+				case 'e':
+					mode = Mode.EnterValue;
+					break;
+				case 'r':
+					restart();
+					break;
+				case 'ArrowLeft':
+				case 'ArrowRight':
+				case 'ArrowUp':
+				case 'ArrowDown':
+					event.preventDefault();
+					if (selectMode === SelectMode.Single) moveSelection(event.key);
+					break;
+				case 'Backspace':
+					clearSelectedEntries();
+					break;
 			}
+			// Otherwise enter the number as a value or toggle a pencilled option
+			// Values and pencil marks are entered in all selected cells
 		} else {
-			if (initialise || enterValue) {
+			if (mode === Mode.Initialise || mode == Mode.EnterValue) {
 				setValue(num);
-			} else if (pencilIn) {
-				console.log('Toggling options', num);
+			} else if (mode === Mode.PencilIn) {
 				toggleOptions(num);
 			}
 		}
@@ -223,11 +305,11 @@
 	// }
 </script>
 
-<svelte:window on:resize={setCellHeight} on:keydown={handleKeydown} />
-
 <!------------------------------------------------------------------------------
 @section HTML
 -------------------------------------------------------------------------------->
+
+<svelte:window on:resize={setCellHeight} on:keydown={handleKeydown} />
 
 <div class="board">
 	<h1>Sudoku Board</h1>
@@ -253,12 +335,13 @@
 					class:left={b % 3 === 0}
 					class:right={b === COLS - 1}
 					class:selected={cell.selected}
+					class:initialised={cell.initialised}
 					style="flex-basis:{100 / COLS}%"
 					bind:this={cell.dom}
 					on:pointerdown={() => cellClicked(a, b)}
 				>
 					{#if cell.value === 0 && optionsString !== ''}
-						<span class="options" class:pointingPair={cell.pointingPair}>
+						<span class="options" class:paired={cell.paired}>
 							{optionsString}
 						</span>
 					{/if}
@@ -272,15 +355,42 @@
 	{/each}
 
 	<div class="controls">
-		<button class:active={initialise} on:click={toggleInitialise}>Initialise (i)</button>
-		<button class:active={enterValue} on:click={toggleEnterValue}>Enter value (e)</button>
-		<button class:active={pencilIn} on:click={togglePencilIn}>Pencil in (p)</button>
+		<label
+			>Initialise (i)
+			<input type="radio" name="mode" bind:group={mode} value={Mode.Initialise} />
+			<span class="checkmark" />
+		</label>
+
+		<label
+			>Enter value(e)
+			<input type="radio" name="mode" bind:group={mode} value={Mode.EnterValue} />
+			<span class="checkmark" />
+		</label>
+
+		<label
+			>Pencil in (p)
+			<input type="radio" name="mode" bind:group={mode} value={Mode.PencilIn} />
+			<span class="checkmark" />
+		</label>
 	</div>
+
 	<div class="controls">
-		<button on:click={togglePointingPairs}>Toggle pair (t)</button>
-		<button class:active={selectMultiple} on:click={toggleSelectMultiple}
-			>Select multiple (s)</button
-		>
+		<label
+			>Select single cells
+			<input type="radio" name="selectMode" bind:group={selectMode} value={SelectMode.Single} />
+			<span class="checkmark" />
+		</label>
+
+		<label
+			>Select multiple cells
+			<input type="radio" name="selectMode" bind:group={selectMode} value={SelectMode.Multiple} />
+			<span class="checkmark" />
+		</label>
+	</div>
+
+	<div class="controls">
+		<button on:click={togglePairs}>Toggle pair (t)</button>
+		<button on:click={restart}>Restart (r)</button>
 		<button on:click={clearBoard}>Clear board (c)</button>
 	</div>
 </div>
@@ -293,6 +403,8 @@
 		position: relative;
 		max-width: 600px;
 		box-sizing: border-box;
+		font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode',
+			Geneva, Verdana, sans-serif;
 		--heavy: 5px;
 	}
 
@@ -328,10 +440,11 @@
 		position: relative;
 		padding: 0;
 		border: 1px solid grey;
+		background-color: white;
 	}
 
-	:global(.cell) {
-		background-color: white;
+	.cell.initialised {
+		background-color: rgb(227, 236, 243);
 	}
 
 	.cell.selected {
@@ -361,7 +474,7 @@
 		font-size: smaller;
 	}
 
-	.options.pointingPair {
+	.options.paired {
 		position: absolute;
 		top: 0;
 		left: 0;
@@ -409,5 +522,49 @@
 	.controls button.active {
 		background-color: rgb(156, 68, 68);
 		color: white;
+	}
+
+	/* Customize the label (the container) */
+	label {
+		display: flex;
+		flex-direction: row-reverse;
+		gap: 0.5rem;
+		cursor: pointer;
+		-webkit-user-select: none;
+		-moz-user-select: none;
+		-ms-user-select: none;
+		user-select: none;
+	}
+
+	/* Hide the browser's default radio button */
+	label input {
+		position: absolute;
+		opacity: 0;
+		cursor: pointer;
+		height: 0;
+		width: 0;
+	}
+
+	/* Create a custom radio button */
+	label .checkmark {
+		box-sizing: border-box;
+		position: relative;
+		height: 1.4rem;
+		width: 1.4rem;
+		background-color: #eee;
+		border: 0.4rem solid #eee;
+		border-radius: 50%;
+	}
+
+	/* On mouse-over, add a grey background color */
+	label:hover .checkmark {
+		background-color: #ccc;
+		border-color: #ccc;
+	}
+
+	/* When the radio button is checked, add a blue background */
+	label input:checked ~ .checkmark {
+		background-color: white;
+		border-color: #2196f3;
 	}
 </style>
