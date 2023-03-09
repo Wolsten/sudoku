@@ -10,6 +10,7 @@
 		dom?: HTMLElement;
 		selected: boolean;
 		paired: boolean;
+		error: boolean;
 	};
 
 	enum Mode {
@@ -30,6 +31,7 @@
 
 	const ROWS = 9;
 	const COLS = 9;
+	const BOX = 3;
 	const grid: Cell[][] = [];
 
 	let lastClicked = 0;
@@ -68,14 +70,15 @@
 					selected: false,
 					options: [],
 					paired: false,
-					initialised: false
+					initialised: false,
+					error: false
 				};
 
 				if (row === 2 && col === 3) {
 					grid[row][col].options = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 				}
 
-				if ((row === 5 && col === 6) || (row === 7 && col === 2)) {
+				if ((row === 5 && col === 6) || (row === 5 && col === 2)) {
 					grid[row][col].value = 6;
 					grid[row][col].initialised = true;
 				}
@@ -127,8 +130,76 @@
 				grid[a][b].options = [];
 				grid[a][b].paired = false;
 				grid[a][b].initialised = false;
+				grid[a][b].error = false;
 			});
 		});
+	}
+
+	function clearErrors() {
+		grid.forEach((row, a) => {
+			row.forEach((cell, b) => {
+				grid[a][b].error = false;
+			});
+		});
+	}
+
+	function showConflicts() {
+		clearErrors();
+		// Rows
+		for (let row = 0; row < ROWS; row++) {
+			for (let col1 = 0; col1 < COLS; col1++) {
+				for (let col2 = 0; col2 < COLS; col2++) {
+					if (
+						grid[row][col1].error === false &&
+						grid[row][col1].value !== 0 &&
+						col1 !== col2 &&
+						grid[row][col1].value === grid[row][col2].value
+					) {
+						console.log('found column mistake in cell', row, col1);
+						grid[row][col1].error = true;
+					}
+				}
+			}
+		}
+		// Columns
+		for (let col = 0; col < COLS; col++) {
+			for (let row1 = 0; row1 < ROWS; row1++) {
+				for (let row2 = 0; row2 < ROWS; row2++) {
+					if (
+						grid[row1][col].error === false &&
+						grid[row1][col].value !== 0 &&
+						row1 !== row2 &&
+						grid[row1][col].value === grid[row2][col].value
+					) {
+						console.log('found column mistake in cell', row1, col);
+						grid[row1][col].error = true;
+					}
+				}
+			}
+		}
+		// Boxes
+		for (let row = 0; row < ROWS; row += BOX) {
+			for (let col = 0; col < COLS; col += BOX) {
+				for (let boxRow1 = row; boxRow1 < row + BOX; boxRow1++) {
+					for (let boxRow2 = row; boxRow2 < row + BOX; boxRow2++) {
+						for (let boxCol1 = col; boxCol1 < col + BOX; boxCol1++) {
+							for (let boxCol2 = col; boxCol2 < col + BOX; boxCol2++) {
+								if (
+									grid[boxRow1][boxCol1].error === false &&
+									grid[boxRow1][boxCol1].value !== 0 &&
+									boxRow1 !== boxRow2 &&
+									boxCol1 !== boxCol2 &&
+									grid[boxRow1][boxCol1].value === grid[boxRow2][boxCol2].value
+								) {
+									console.log('found column mistake in box', boxRow1, boxCol1);
+									grid[boxRow1][boxCol1].error = true;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 	function toggleOptions(num: number) {
@@ -276,6 +347,9 @@
 				case 'r':
 					restart();
 					break;
+				case 's':
+					showConflicts();
+					break;
 				case 'ArrowLeft':
 				case 'ArrowRight':
 				case 'ArrowUp':
@@ -330,12 +404,13 @@
 				{@const optionsString = cell.options ? cell.options.join(' ') : ''}
 				<span
 					class="cell"
-					class:top={a % 3 === 0}
+					class:top={a % BOX === 0}
 					class:bottom={a === ROWS - 1}
-					class:left={b % 3 === 0}
+					class:left={b % BOX === 0}
 					class:right={b === COLS - 1}
 					class:selected={cell.selected}
 					class:initialised={cell.initialised}
+					class:error={cell.error}
 					style="flex-basis:{100 / COLS}%"
 					bind:this={cell.dom}
 					on:pointerdown={() => cellClicked(a, b)}
@@ -390,6 +465,7 @@
 
 	<div class="controls">
 		<button on:click={togglePairs}>Toggle pair (t)</button>
+		<button on:click={showConflicts}>Show conflicts (s)</button>
 		<button on:click={restart}>Restart (r)</button>
 		<button on:click={clearBoard}>Clear board (c)</button>
 	</div>
@@ -465,6 +541,10 @@
 
 	.cell.right {
 		border-right-width: var(--heavy);
+	}
+
+	.cell.error {
+		color: red;
 	}
 
 	.options {
