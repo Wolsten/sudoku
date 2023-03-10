@@ -1,38 +1,17 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
-	type Cell = {
-		initialised: boolean;
-		value: number;
-		options: number[];
-		colours?: string[];
-		dom?: HTMLElement;
-		selected: boolean;
-		paired: boolean;
-		error: boolean;
-	};
+	import { savedGrid } from './stores';
 
-	enum Mode {
-		Initialise = 0,
-		EnterValue = 1,
-		PencilIn = 2
-	}
+	import type { Cell, SelectedCell } from './types';
 
-	enum SelectMode {
-		Single = 0,
-		Multiple = 1
-	}
-
-	type SelectedCell = {
-		row: number;
-		col: number;
-	};
+	import { Mode, SelectMode } from './types';
 
 	const ROWS = 9;
 	const COLS = 9;
 	const BOX = 3;
-	const grid: Cell[][] = [];
 
+	let grid: Cell[][] = [];
 	let lastClicked = 0;
 	let mode: Mode = Mode.EnterValue;
 	let selectMode: SelectMode = SelectMode.Single;
@@ -87,10 +66,11 @@
 	}
 
 	function setCellHeight() {
+		const width = grid[0][0].dom?.clientWidth;
 		grid.forEach((row) => {
 			row.forEach((cell) => {
 				if (cell.dom) {
-					cell.dom.style.height = cell.dom.clientWidth + 'px';
+					cell.dom.style.height = width + 'px';
 				}
 			});
 		});
@@ -323,6 +303,51 @@
 		});
 	}
 
+	function saveBoard() {
+		console.log(
+			'saved before save',
+			$savedGrid[0] && $savedGrid[0][0] ? $savedGrid[0][0]?.value : 0
+		);
+		console.log('grid before save', grid[0][0].value);
+
+		grid.forEach((row, a) => {
+			$savedGrid[a] = [];
+			row.forEach((cell, b) => {
+				$savedGrid[a][b] = {
+					value: cell.value,
+					selected: cell.selected,
+					options: [...cell.options],
+					paired: cell.paired,
+					initialised: cell.initialised,
+					error: cell.error
+				};
+			});
+		});
+
+		console.log('saved after save', $savedGrid[0][0].value);
+		console.log('grid after save', grid[0][0].value);
+	}
+
+	function restoreBoard() {
+		console.log('saved before restore', $savedGrid[0][0].value);
+		console.log('grid before restore', grid[0][0].value);
+		$savedGrid.forEach((row, a) => {
+			grid[a] = [];
+			row.forEach((cell, b) => {
+				grid[a][b] = {
+					value: cell.value,
+					selected: cell.selected,
+					options: [...cell.options],
+					paired: cell.paired,
+					initialised: cell.initialised,
+					error: cell.error
+				};
+			});
+		});
+		console.log('saved after restore', $savedGrid[0][0].value);
+		console.log('grid after restore', grid[0][0].value);
+	}
+
 	function handleKeydown(event: KeyboardEvent) {
 		console.log('keydown', event, event.key);
 
@@ -349,6 +374,18 @@
 					restart();
 					break;
 				case 's':
+					selectMode = SelectMode.Single;
+					break;
+				case 'm':
+					selectMode = SelectMode.Multiple;
+					break;
+				case 'a':
+					clearSelections();
+					break;
+				case 'b':
+					clearBoard();
+					break;
+				case 'c':
 					showConflicts();
 					break;
 				case 'ArrowLeft':
@@ -386,94 +423,137 @@
 
 <svelte:window on:resize={setCellHeight} on:keydown={handleKeydown} />
 
-<div class="board" class:visible>
+<div class="container">
 	<h1>Sudoku Board</h1>
 
-	<div class="col-header">
-		<span class="label">&nbsp;</span>
-		{#each grid[0] as col, b}
-			<span class="label" style="flex-basis:{100 / COLS}%">
-				{b + 1}
-			</span>
-		{/each}
-	</div>
-
-	{#each grid as row, a}
-		<div class="row">
-			<!-- <span class="label"><span>{a + 1}</span></span> -->
-			{#each row as cell, b}
-				{@const optionsString = cell.options ? cell.options.join(' ') : ''}
-				<span
-					class="cell"
-					class:top={a % BOX === 0}
-					class:bottom={a === ROWS - 1}
-					class:left={b % BOX === 0}
-					class:right={b === COLS - 1}
-					class:selected={cell.selected}
-					class:initialised={cell.initialised}
-					class:error={cell.error}
-					bind:this={cell.dom}
-					on:pointerdown={() => cellClicked(a, b)}
-				>
-					{#if cell.value === 0 && optionsString !== ''}
-						<span class="options" class:paired={cell.paired}>
-							{optionsString}
-						</span>
-					{/if}
-
-					{#if cell.value > 0}
-						<span class="value">{cell.value}</span>
-					{/if}
+	<div class="board" class:visible class:initialising={mode === Mode.Initialise}>
+		<div class="col-header">
+			{#each grid[0] as col, b}
+				<span class="label">
+					{b + 1}
 				</span>
 			{/each}
 		</div>
-	{/each}
+
+		<div class="row-header">
+			{#each grid[0] as col, b}
+				<span class="label">
+					{b + 1}
+				</span>
+			{/each}
+		</div>
+
+		{#each grid as row, a}
+			<div class="row">
+				<!-- <span class="label">{a + 1}</span> -->
+				{#each row as cell, b}
+					{@const optionsString = cell.options ? cell.options.sort((a, b) => a - b).join(' ') : ''}
+					<span
+						class="cell"
+						class:top={a % BOX === 0}
+						class:bottom={a === ROWS - 1}
+						class:left={b % BOX === 0}
+						class:right={b === COLS - 1}
+						class:selected={cell.selected}
+						class:initialised={cell.initialised}
+						class:error={cell.error}
+						bind:this={cell.dom}
+						on:pointerdown={() => cellClicked(a, b)}
+					>
+						{#if cell.value === 0 && optionsString !== ''}
+							<span class="options" class:paired={cell.paired}>
+								{optionsString}
+							</span>
+						{/if}
+
+						{#if cell.value > 0}
+							<span class="value">{cell.value}</span>
+						{/if}
+					</span>
+				{/each}
+			</div>
+		{/each}
+	</div>
 
 	<div class="controls mode">
-		<label title="Use this mode to set up the starting values on the board"
-			>Initialise (i)
-			<input type="radio" name="mode" bind:group={mode} value={Mode.Initialise} />
-			<span class="checkmark" />
-		</label>
-
-		<label title="Use this mode to add your (partial) solution to the board"
-			>Enter value(e)
-			<input type="radio" name="mode" bind:group={mode} value={Mode.EnterValue} />
-			<span class="checkmark" />
-		</label>
-
-		<label title="Use this mode to pencil in possible values in each cell"
-			>Pencil in (p)
-			<input type="radio" name="mode" bind:group={mode} value={Mode.PencilIn} />
-			<span class="checkmark" />
-		</label>
+		<div class="group">
+			<label
+				title="Use this mode to set up the starting values on the board"
+				class:active={mode === Mode.Initialise}
+			>
+				<span><span class="shortcut">I</span>nitialise</span>
+				<input type="radio" name="mode" bind:group={mode} value={Mode.Initialise} />
+			</label>
+			<label
+				title="Use this mode to add your (partial) solution to the board"
+				class:active={mode === Mode.EnterValue}
+			>
+				<span><span class="shortcut">E</span>nter value</span>
+				<input type="radio" name="mode" bind:group={mode} value={Mode.EnterValue} />
+			</label>
+			<label
+				title="Use this mode to pencil in possible values in each cell"
+				class:active={mode === Mode.PencilIn}
+			>
+				<span><span class="shortcut">P</span>encil in</span>
+				<input type="radio" name="mode" bind:group={mode} value={Mode.PencilIn} />
+			</label>
+		</div>
 	</div>
 
 	<div class="controls select">
-		<label title="Only allow single cell selections"
-			>Single cells
-			<input type="radio" name="selectMode" bind:group={selectMode} value={SelectMode.Single} />
-			<span class="checkmark" />
-		</label>
+		<div class="group">
+			<label
+				title="Only allow single cell selections"
+				class:active={selectMode === SelectMode.Single}
+			>
+				<span><span class="shortcut">S</span>ingle</span>
+				<input type="radio" name="selectMode" bind:group={selectMode} value={SelectMode.Single} />
+				<span class="checkmark" />
+			</label>
+			<label
+				title="Allow multiple cell selections and value entry plus pencil marks"
+				class:active={selectMode === SelectMode.Multiple}
+			>
+				<span><span class="shortcut">M</span>ultiple</span>
+				<input type="radio" name="selectMode" bind:group={selectMode} value={SelectMode.Multiple} />
+				<span class="checkmark" />
+			</label>
+		</div>
 
-		<label title="Allow multiple cell selections and value entry plus pencil marks"
-			>Multiple cells
-			<input type="radio" name="selectMode" bind:group={selectMode} value={SelectMode.Multiple} />
-			<span class="checkmark" />
-		</label>
+		<div class="group">
+			<button on:click={clearSelections} title="Clear selections">
+				C<span class="shortcut">l</span>ear
+			</button>
+		</div>
 	</div>
 
 	<div class="controls commands">
-		<button on:click={togglePairs} title="Where selected cells have only two options, mark these"
-			>Toggle pair (t)</button
+		<button on:click={togglePairs} title="Where selected cells have only two options, mark these">
+			<span class="shortcut">T</span>oggle pair
+		</button>
+
+		<button on:click={showConflicts} title="Show conflicting cells in rows, columns and boxes">
+			Show <span class="shortcut">c</span>onflicts
+		</button>
+
+		<button on:click={saveBoard} title="Save the current state of the board"> Save </button>
+
+		<button
+			on:click={restoreBoard}
+			title="Restore the previously saved state of the board"
+			disabled={$savedGrid.length === 0}
 		>
-		<button on:click={showConflicts} title="Show conflicting cells in rows, columns and boxes"
-			>Show conflicts (s)</button
-		>
-		<button on:click={restart} title="Restart the puzzle, retaining initial puzzle setup"
-			>Restart (r)</button
-		>
-		<button on:click={clearBoard} title="Clear all data on the board">Clear board (c)</button>
+			Restore
+		</button>
+
+		<button on:click={restart} title="Restart the puzzle, retaining initial puzzle setup">
+			<span class="shortcut">R</span>estart
+		</button>
+
+		<button on:click={clearBoard} title="Clear all data on the board">
+			Clear <span class="shortcut">b</span>oard
+		</button>
 	</div>
 </div>
 
@@ -483,22 +563,43 @@
 
 -------------------------------------------------------------------------------->
 <style>
-	.board * {
+	:global(body) {
+		width: 90vw;
+		/* border: 1px solid green; */
+		margin: 0;
+	}
+
+	.container * {
 		box-sizing: border-box;
 		font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode',
 			Geneva, Verdana, sans-serif;
+
 		/* Variables */
+		--heavy-lines: 5px;
+		--primary-colour: rgb(84, 79, 97);
+		--primary-colour-lighter: rgb(187, 198, 214);
+		--select-colour: rgb(161, 223, 176);
+		--font-colour: rgb(71, 68, 79);
+		--font-colour-light: rgb(125, 123, 123);
+		--font-colour-initial: rgb(245, 240, 240);
+		--font-colour-error: red;
+
+		color: var(--font-colour);
+	}
+
+	.container {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 	}
 
 	.board {
+		position: relative;
 		visibility: hidden;
 		position: relative;
+		width: 100%;
 		max-width: 600px;
-
-		--heavy-lines: 5px;
-		--primary-colour: rgb(59, 113, 190);
-		--primary-colour-lighter: rgb(190, 212, 242);
-		--select-colour: rgb(161, 223, 176);
+		padding: 0 1rem;
 	}
 
 	.board.visible {
@@ -512,37 +613,40 @@
 
 	.col-header {
 		display: flex;
-		justify-content: space-between;
-		margin-bottom: 0.5rem;
+		justify-content: space-around;
+		margin-bottom: 0.3rem;
+		font-size: 0.8rem;
 	}
 
-	.label {
-		border: none;
-		text-align: center;
-		color: grey;
+	.row-header {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-around;
+		position: absolute;
+		left: 0.1rem;
+		height: 95%;
+		font-size: 0.8rem;
 	}
 
 	.row {
-		display: flex;
-		justify-content: space-between;
+		display: grid;
+		grid-auto-columns: minmax(0, 1fr);
+		grid-auto-flow: column;
 	}
 
-	.row .label {
-		margin-right: 0.5rem;
-		display: flex;
-		align-items: center;
+	.label {
+		color: var(--font-colour-light);
 	}
 
 	.cell {
 		position: relative;
 		padding: 0;
-		border: 1px solid grey;
+		border: 1px solid var(--primary-colour-lighter);
 		background-color: white;
-		flex-basis: calc(100% / 10);
 	}
 
-	.cell.initialised {
-		background-color: var(--primary-colour-lighter);
+	.board.initialising .cell.initialised {
+		background-color: var(--font-colour-initial);
 	}
 
 	.cell.selected {
@@ -550,30 +654,31 @@
 	}
 
 	.cell.top {
-		border-top-width: var(--heavy-lines);
+		border-top-color: var(--primary-colour);
 	}
 
 	.cell.bottom {
-		border-bottom-width: var(--heavy-lines);
+		border-bottom-color: var(--primary-colour);
 	}
 
 	.cell.left {
-		border-left-width: var(--heavy-lines);
+		border-left-color: var(--primary-colour);
 	}
 
 	.cell.right {
-		border-right-width: var(--heavy-lines);
+		border-right-color: var(--primary-colour);
 	}
 
-	.cell.error {
-		color: red;
+	.cell.error .value {
+		color: var(--font-colour-error);
 	}
 
 	.options {
 		display: inline-block;
 		padding: 0.1rem;
-		color: grey;
-		font-size: smaller;
+		color: var(--font-colour-light);
+		font-size: 0.7rem;
+		line-height: 0.8rem;
 	}
 
 	.options.paired {
@@ -585,6 +690,7 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
+		font-size: 0.8rem;
 	}
 
 	.value {
@@ -608,14 +714,21 @@
 		width: 94%;
 		display: flex;
 		flex-wrap: wrap;
-		justify-content: space-around;
-		border: 1px solid grey;
+		justify-content: flex-start;
+		border: 1px solid var(--primary-colour);
 		border-radius: 0.3rem;
 		gap: 1rem;
 		padding: 1rem;
 		margin: 1rem 3%;
 		position: relative;
 	}
+
+	.group {
+		display: flex;
+		justify-content: flex-start;
+	}
+
+	/* Control area titles */
 
 	.controls::after {
 		position: absolute;
@@ -626,69 +739,97 @@
 		padding: 0.3rem;
 	}
 
+	.controls .shortcut {
+		display: inline-block;
+		border-bottom: 1px solid var(--font-colour);
+	}
+
 	.controls.mode::after {
 		content: 'Mode';
 	}
 	.controls.select::after {
-		content: 'Select';
+		content: 'Cell selection';
 	}
 	.controls.commands::after {
 		content: 'Commands';
 	}
 
+	.controls.commands {
+		gap: 1rem;
+	}
+
 	.controls button {
 		background-color: white;
 		padding: 0.3rem 0.6rem;
-		border: 1px solid grey;
+		border: 1px solid var(--primary-colour-lighter);
 		border-radius: 0.2rem;
 	}
 
-	.controls button:hover {
+	.controls button[disabled] {
+		color: var(--primary-colour-lighter);
+		cursor: default;
+	}
+
+	.controls button:not([disabled]):hover {
 		border-color: var(--primary-colour-lighter);
 		background-color: var(--primary-colour-lighter);
+		cursor: pointer;
 	}
 
 	/* Customize the label (the container) */
-	label {
+	.controls label {
+		font-size: 0.9rem;
 		display: flex;
 		flex-direction: row-reverse;
-		gap: 0.5rem;
-		cursor: pointer;
+		align-items: center;
+		gap: 0.3rem;
+
 		-webkit-user-select: none;
 		-moz-user-select: none;
 		-ms-user-select: none;
 		user-select: none;
+
+		padding: 0.3rem 0.5rem;
+		border-top: 1px solid var(--primary-colour-lighter);
+		border-bottom: 1px solid var(--primary-colour-lighter);
+		border-left: 1px solid var(--primary-colour-lighter);
+
+		--border-radius: 0.3rem;
+	}
+
+	.controls label:hover {
+		background-color: var(--primary-colour-lighter);
+		cursor: pointer;
+	}
+
+	.controls label.active {
+		background-color: var(--primary-colour);
+		border-color: var(--primary-colour);
+		cursor: default;
+	}
+
+	.controls label.active span {
+		color: white;
+	}
+
+	.controls label:first-child {
+		border-top-left-radius: var(--border-radius);
+		border-bottom-left-radius: var(--border-radius);
+	}
+
+	.controls label:last-child {
+		border-right: 1px solid var(--primary-colour-lighter);
+		border-top-right-radius: var(--border-radius);
+		border-bottom-right-radius: var(--border-radius);
 	}
 
 	/* Hide the browser's default radio button */
-	label input {
+	.controls label input {
 		position: absolute;
 		opacity: 0;
 		cursor: pointer;
 		height: 0;
 		width: 0;
-	}
-
-	/* Create a custom radio button */
-	label .checkmark {
-		box-sizing: border-box;
-		position: relative;
-		height: 1.4rem;
-		width: 1.4rem;
-		background-color: #eee;
-		border: 0.4rem solid #eee;
-		border-radius: 50%;
-	}
-
-	/* On mouse-over, add a grey background color */
-	label:hover .checkmark {
-		background-color: #ccc;
-		border-color: #ccc;
-	}
-
-	/* When the radio button is checked, add a blue background */
-	label input:checked ~ .checkmark {
-		background-color: white;
-		border-color: var(--primary-colour);
+		margin: 0;
 	}
 </style>
