@@ -7,23 +7,22 @@
 
 	import { Mode, SelectMode } from './types';
 
-	import Controls from './Controls.svelte';
-
 	const ROWS = 9;
 	const COLS = 9;
 	const BOX = 3;
 
 	let grid: Cell[][] = [];
 	let lastClicked = 0;
-	let mode: Mode = Mode.EnterValue;
-	let selectMode: SelectMode = SelectMode.Single;
-	let selectedCell: SelectedCell = { row: -1, col: -1 };
-	let visible = false;
-	let colour: string = '';
 
-	function test(col: string) {
-		console.log('colour', col);
-	}
+	export let mode: Mode;
+	export let selectMode: SelectMode;
+	export let command = '';
+
+	let selectedCell: SelectedCell = { row: -1, col: -1 };
+
+	let visible = false;
+
+	$: console.log('board mode', mode);
 
 	// -----------------------------------------------------------------------------
 	// @section State handling
@@ -34,6 +33,32 @@
 	onMount(() => {
 		setCellHeight();
 	});
+
+	$: switch (command) {
+		case 'f':
+			fixPencilMarks();
+			break;
+		case 'h':
+			showConflicts();
+			break;
+		case 'v':
+			saveBoard();
+			break;
+		case 'o':
+			restoreBoard();
+			break;
+		case 'r':
+			restart();
+			break;
+		case 'b':
+			clearBoard();
+			break;
+	}
+
+	$: if (selectMode === SelectMode.Clear) {
+		clearSelections();
+		selectMode = SelectMode.Single;
+	}
 
 	// -----------------------------------------------------------------------------
 	// @section Functions
@@ -55,6 +80,7 @@
 
 				if (row === 2 && col === 3) {
 					grid[row][col].options = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+					grid[row][col].colours = [1, 2, 3, 4];
 				}
 
 				if ((row === 5 && col === 6) || (row === 5 && col === 2)) {
@@ -103,13 +129,11 @@
 		});
 	}
 
-	function togglePairs() {
+	function fixPencilMarks() {
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
 				if (cell.selected) {
-					if (cell.options.length === 2) {
-						grid[a][b].paired = !cell.paired;
-					}
+					grid[a][b].paired = !cell.paired;
 				}
 			});
 		});
@@ -370,6 +394,24 @@
 		});
 	}
 
+	function getPieStyle(colours: number[]): string {
+		if (colours.length === 0) return '';
+		const inc = 360 / colours.length;
+		let angle = 0;
+		let style = `background: conic-gradient(`;
+		for (let index = 0; index < colours.length; index++) {
+			const colour = `var(--background-colour-${colours[index]})`;
+			const angle1 = angle;
+			const angle2 = angle + inc;
+			style += `${colour} ${angle1}deg ${angle2}deg`;
+			if (index < colours.length - 1) style += `,`;
+			angle += inc;
+		}
+		style += `);`;
+		console.log('style', style);
+		return style;
+	}
+
 	function handleKeydown(event: KeyboardEvent) {
 		console.log('keydown', event, event.key);
 
@@ -380,42 +422,42 @@
 		// Check none-numbers first
 		if (isNaN(num)) {
 			switch (event.key) {
-				case 't':
-					togglePairs();
-					break;
-				case 'i':
-					mode = mode === Mode.Initialise ? Mode.EnterValue : Mode.Initialise;
-					break;
-				case 'p':
-					mode = Mode.PencilIn;
-					break;
-				case 'e':
-					mode = Mode.EnterValue;
-					break;
-				case 'r':
-					restart();
-					break;
-				case 's':
-					selectMode = SelectMode.Single;
-					break;
-				case 'm':
-					selectMode = SelectMode.Multiple;
-					break;
-				case 'c':
-					clearSelections();
-					break;
-				case 'b':
-					clearBoard();
-					break;
-				case 'h':
-					showConflicts();
-					break;
-				case 'v':
-					saveBoard();
-					break;
-				case 'o':
-					restoreBoard();
-					break;
+				// case 'f':
+				// 	fixPencilMarks();
+				// 	break;
+				// case 'i':
+				// 	mode = mode === Mode.Initialise ? Mode.EnterValue : Mode.Initialise;
+				// 	break;
+				// case 'p':
+				// 	mode = Mode.PencilIn;
+				// 	break;
+				// case 'e':
+				// 	mode = Mode.EnterValue;
+				// 	break;
+				// case 'r':
+				// 	restart();
+				// 	break;
+				// case 's':
+				// 	selectMode = SelectMode.Single;
+				// 	break;
+				// case 'm':
+				// 	selectMode = SelectMode.Multiple;
+				// 	break;
+				// case 'c':
+				// 	clearSelections();
+				// 	break;
+				// case 'b':
+				// 	clearBoard();
+				// 	break;
+				// case 'h':
+				// 	showConflicts();
+				// 	break;
+				// case 'v':
+				// 	saveBoard();
+				// 	break;
+				// case 'o':
+				// 	restoreBoard();
+				// 	break;
 				case 'ArrowLeft':
 				case 'ArrowRight':
 				case 'ArrowUp':
@@ -455,27 +497,12 @@
 	<h1>Sudoku Board</h1>
 
 	<div class="board" class:visible class:initialising={mode === Mode.Initialise}>
-		<div class="col-header">
-			{#each grid[0] as col, b}
-				<span class="label">
-					{b + 1}
-				</span>
-			{/each}
-		</div>
-
-		<div class="row-header">
-			{#each grid[0] as col, b}
-				<span class="label">
-					{b + 1}
-				</span>
-			{/each}
-		</div>
-
 		{#each grid as row, a}
 			<div class="row">
 				<!-- <span class="label">{a + 1}</span> -->
 				{#each row as cell, b}
 					{@const optionsString = cell.options ? cell.options.sort((a, b) => a - b).join(' ') : ''}
+					{@const backgroundStyle = getPieStyle(cell.colours)}
 					<span
 						class="cell"
 						class:top={a % BOX === 0}
@@ -485,6 +512,7 @@
 						class:selected={cell.selected}
 						class:initialised={cell.initialised}
 						class:error={cell.error}
+						style={backgroundStyle}
 						bind:this={cell.dom}
 						on:pointerdown={() => cellClicked(a, b)}
 					>
@@ -504,8 +532,6 @@
 	</div>
 </div>
 
-<Controls on:selectMode={handleSelectMode} on:colour={handleColour} on:mode={handleMode} />
-
 <!------------------------------------------------------------------------------
 
 @section Styling
@@ -514,21 +540,25 @@
 <style>
 	:global(:root) {
 		/* Variables */
-		--heavy-lines: 5px;
 		--primary-colour: rgb(84, 79, 97);
 		--primary-colour-lighter: rgb(187, 198, 214);
-		--select-colour: rgb(161, 223, 176);
-		--font-colour: rgb(71, 68, 79);
+		--select-colour: rgb(240, 240, 240);
+
+		--font-colour: rgb(82, 80, 85);
 		--font-colour-light: rgb(125, 123, 123);
 		--font-colour-initial: rgb(245, 240, 240);
 		--font-colour-error: red;
+
+		--background-colour-1: rgb(220, 127, 127);
+		--background-colour-2: rgb(163, 212, 159);
+		--background-colour-3: rgb(152, 149, 245);
+		--background-colour-4: rgb(241, 244, 90);
 
 		color: var(--font-colour);
 	}
 
 	:global(body) {
 		width: 90vw;
-		/* border: 1px solid green; */
 		margin: 0;
 	}
 
@@ -550,7 +580,7 @@
 		position: relative;
 		width: 100%;
 		max-width: 600px;
-		padding: 0 1rem;
+		padding: 0 0.5rem;
 	}
 
 	.board.visible {
@@ -560,23 +590,6 @@
 	h1 {
 		text-align: center;
 		position: relative;
-	}
-
-	.col-header {
-		display: flex;
-		justify-content: space-around;
-		margin-bottom: 0.3rem;
-		font-size: 0.8rem;
-	}
-
-	.row-header {
-		display: flex;
-		flex-direction: column;
-		justify-content: space-around;
-		position: absolute;
-		left: 0.1rem;
-		height: 95%;
-		font-size: 0.8rem;
 	}
 
 	.row {
@@ -653,10 +666,5 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-	}
-
-	.cell:not(.initialised).selected .value,
-	.cell:not(.initialised).selected .options {
-		color: white;
 	}
 </style>

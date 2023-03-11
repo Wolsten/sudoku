@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Board from '../lib/Board.svelte';
+	import Sudoku from '../lib/Sudoku.svelte';
 </script>
 
-<Board />
+<Sudoku />

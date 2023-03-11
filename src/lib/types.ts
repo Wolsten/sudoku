@@ -2,7 +2,7 @@ export type Cell = {
     initialised: boolean;
     value: number;
     options: number[];
-    colours: string[];
+    colours: number[];
     dom?: HTMLElement;
     selected: boolean;
     paired: boolean;
@@ -17,7 +17,8 @@ export enum Mode {
 
 export enum SelectMode {
     Single = 0,
-    Multiple = 1
+    Multiple = 1,
+    Clear = 2
 }
 
 export type SelectedCell = {
