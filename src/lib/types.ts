@@ -2,7 +2,7 @@ export type Cell = {
     initialised: boolean;
     value: number;
     options: number[];
-    colours?: string[];
+    colours: string[];
     dom?: HTMLElement;
     selected: boolean;
     paired: boolean;

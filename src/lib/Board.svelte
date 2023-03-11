@@ -19,6 +19,11 @@
 	let selectMode: SelectMode = SelectMode.Single;
 	let selectedCell: SelectedCell = { row: -1, col: -1 };
 	let visible = false;
+	let colour: string = '';
+
+	function test(col: string) {
+		console.log('colour', col);
+	}
 
 	// -----------------------------------------------------------------------------
 	// @section State handling
@@ -29,10 +34,6 @@
 	onMount(() => {
 		setCellHeight();
 	});
-
-	$: if (mode === Mode.Initialise) cellClicked(0, 0);
-
-	$: if (selectMode === SelectMode.Single || SelectMode.Multiple) clearSelections();
 
 	// -----------------------------------------------------------------------------
 	// @section Functions
@@ -46,6 +47,7 @@
 					value: 0,
 					selected: false,
 					options: [],
+					colours: [],
 					paired: false,
 					initialised: false,
 					error: false
@@ -61,6 +63,18 @@
 				}
 			}
 		}
+	}
+
+	function handleMode(event: any) {
+		mode = event.detail.mode;
+		console.log('New mode', mode);
+		if (mode === Mode.Initialise) cellClicked(0, 0);
+	}
+
+	function handleSelectMode(event: any) {
+		selectMode = event.detail.selectMode;
+		console.log('New select mode', selectMode);
+		if (selectMode === SelectMode.Single || SelectMode.Multiple) clearSelections();
 	}
 
 	function setCellHeight() {
@@ -119,6 +133,7 @@
 				grid[a][b].value = 0;
 				grid[a][b].selected = false;
 				grid[a][b].options = [];
+				grid[a][b].colours = [];
 				grid[a][b].paired = false;
 				grid[a][b].initialised = false;
 				grid[a][b].error = false;
@@ -210,18 +225,20 @@
 	}
 
 	function setValue(num: number) {
-		let setRow = -1;
-		let setCol = -1;
+		// let setRow = -1;
+		// let setCol = -1;
+		console.log('setting value');
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
 				if (cell.selected) {
-					if (mode === Mode.Initialise || cell.initialised === false) {
+					console.log('setting value cell', a, b, mode);
+					if (mode === Mode.EnterValue && cell.initialised === false) {
 						grid[a][b].value = num;
-					}
-					if (mode === Mode.Initialise) {
-						setRow = a;
-						setCol = b;
-						grid[a][b].selected = false;
+					} else if (mode === Mode.Initialise) {
+						// setRow = a;
+						// setCol = b;
+						console.log('Setting cell to initialised', a, b);
+						grid[a][b].value = num;
 						grid[a][b].initialised = true;
 					}
 				}
@@ -302,12 +319,6 @@
 	}
 
 	function saveBoard() {
-		console.log(
-			'saved before save',
-			$savedGrid[0] && $savedGrid[0][0] ? $savedGrid[0][0]?.value : 0
-		);
-		console.log('grid before save', grid[0][0].value);
-
 		grid.forEach((row, a) => {
 			$savedGrid[a] = [];
 			row.forEach((cell, b) => {
@@ -315,20 +326,16 @@
 					value: cell.value,
 					selected: cell.selected,
 					options: [...cell.options],
+					colours: [...cell.colours],
 					paired: cell.paired,
 					initialised: cell.initialised,
 					error: cell.error
 				};
 			});
 		});
-
-		console.log('saved after save', $savedGrid[0][0].value);
-		console.log('grid after save', grid[0][0].value);
 	}
 
 	function restoreBoard() {
-		console.log('saved before restore', $savedGrid[0][0].value);
-		console.log('grid before restore', grid[0][0].value);
 		$savedGrid.forEach((row, a) => {
 			grid[a] = [];
 			row.forEach((cell, b) => {
@@ -336,14 +343,31 @@
 					value: cell.value,
 					selected: cell.selected,
 					options: [...cell.options],
+					colours: [...cell.colours],
 					paired: cell.paired,
 					initialised: cell.initialised,
 					error: cell.error
 				};
 			});
 		});
-		console.log('saved after restore', $savedGrid[0][0].value);
-		console.log('grid after restore', grid[0][0].value);
+	}
+
+	function handleColour(event: any) {
+		const colour = event.detail.colour;
+		console.log('new colour', colour);
+		grid.forEach((row, a) => {
+			row.forEach((cell, b) => {
+				if (cell.selected) {
+					let colours = cell.colours;
+					if (colours.includes(colour)) {
+						colours = colours.filter((c) => c !== colour);
+					} else {
+						colours.push(colour);
+					}
+					grid[a][b].colours = [...colours];
+				}
+			});
+		});
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
@@ -377,10 +401,10 @@
 				case 'm':
 					selectMode = SelectMode.Multiple;
 					break;
-				case 'a':
+				case 'c':
 					clearSelections();
 					break;
-				case 'c':
+				case 'b':
 					clearBoard();
 					break;
 				case 'h':
@@ -480,7 +504,7 @@
 	</div>
 </div>
 
-<Controls {mode} {selectMode} />
+<Controls on:selectMode={handleSelectMode} on:colour={handleColour} on:mode={handleMode} />
 
 <!------------------------------------------------------------------------------
 
@@ -631,8 +655,8 @@
 		align-items: center;
 	}
 
-	.selected .value,
-	.selected .options {
+	.cell:not(.initialised).selected .value,
+	.cell:not(.initialised).selected .options {
 		color: white;
 	}
 </style>

@@ -1,13 +1,27 @@
 <script lang="ts">
 	import { Mode, SelectMode } from './types';
+	import { createEventDispatcher } from 'svelte';
+
 	import { savedGrid } from './stores';
 
-	export let mode: Mode;
-	export let selectMode: SelectMode;
+	let mode: Mode;
+	let selectMode: SelectMode;
+
+	const PALETTE: string[] = ['red', 'green', 'blue'];
+	const dispatch = createEventDispatcher();
 
 	function keydownEvent(key: string) {
 		window.dispatchEvent(new KeyboardEvent('keydown', { key }));
 	}
+
+	function setColour(index: number) {
+		const colour = PALETTE[index];
+		console.log('colour', colour);
+		dispatch('colour', { colour });
+	}
+
+	$: dispatch('mode', { mode });
+	$: dispatch('selectMode', { selectMode });
 </script>
 
 <div class="controls mode">
@@ -58,6 +72,15 @@
 		<button on:click={() => keydownEvent('c')} title="Clear selections">
 			<span class="shortcut">C</span>lear
 		</button>
+	</div>
+
+	<div class="group colours">
+		{#each PALETTE as colour, index}
+			<label style="background-color:{colour};">
+				&nbsp;
+				<input type="button" on:click={() => setColour(index)} />
+			</label>
+		{/each}
 	</div>
 </div>
 
@@ -121,6 +144,7 @@
 	.group {
 		display: flex;
 		justify-content: flex-start;
+		align-items: center;
 	}
 
 	/* Control area titles */
@@ -210,12 +234,12 @@
 		color: white;
 	}
 
-	.controls label:first-child {
+	.controls .group label:first-child {
 		border-top-left-radius: var(--border-radius);
 		border-bottom-left-radius: var(--border-radius);
 	}
 
-	.controls label:last-child {
+	.controls .group label:last-child {
 		border-right: 1px solid var(--primary-colour-lighter);
 		border-top-right-radius: var(--border-radius);
 		border-bottom-right-radius: var(--border-radius);
@@ -229,5 +253,11 @@
 		height: 0;
 		width: 0;
 		margin: 0;
+	}
+
+	.controls .group.colours label {
+		border-color: transparent;
+		width: 1.4rem;
+		height: 1.4rem;
 	}
 </style>
