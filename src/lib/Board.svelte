@@ -1,11 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { registerKey } from './utils';
 
 	import { savedGrid } from './stores';
-
 	import type { Cell, SelectedCell } from './types';
-
 	import { Mode, SelectMode } from './types';
+
+	export let mode: Mode;
+	export let selectMode: SelectMode;
+	export let number: number;
 
 	const ROWS = 9;
 	const COLS = 9;
@@ -14,15 +17,19 @@
 	let grid: Cell[][] = [];
 	let lastClicked = 0;
 
-	export let mode: Mode;
-	export let selectMode: SelectMode;
-	export let command = '';
+	let command = '';
 
 	let selectedCell: SelectedCell = { row: -1, col: -1 };
-
 	let visible = false;
 
-	$: console.log('board mode', mode);
+	// $: console.log('board mode', mode);
+
+	// Register keys
+	registerKey('ArrowLeft');
+	registerKey('ArrowRight');
+	registerKey('ArrowUp');
+	registerKey('ArrowDown');
+	registerKey('Backspace');
 
 	// -----------------------------------------------------------------------------
 	// @section State handling
@@ -34,35 +41,102 @@
 		setCellHeight();
 	});
 
-	$: switch (command) {
-		case 'f':
-			fixPencilMarks();
-			break;
-		case 'h':
-			showConflicts();
-			break;
-		case 'v':
-			saveBoard();
-			break;
-		case 'o':
-			restoreBoard();
-			break;
-		case 'r':
-			restart();
-			break;
-		case 'b':
-			clearBoard();
-			break;
+	$: if (number !== -1) {
+		console.log('Board: number=', number);
+		setNumber(number);
+		number = -1;
 	}
 
-	$: if (selectMode === SelectMode.Clear) {
-		clearSelections();
-		selectMode = SelectMode.Single;
+	export const set = function (c: string) {
+		console.log('update set command', c);
+		command = c;
+	};
+
+	$: if (command !== '') {
+		console.log('Board: command=', command);
+
+		switch (command) {
+			// Mode
+			case 'initialise':
+				mode = mode === Mode.Initialise ? Mode.EnterValue : Mode.Initialise;
+				break;
+			case 'enter-value':
+				mode = Mode.EnterValue;
+				break;
+			case 'pencil-in':
+				mode = Mode.PencilIn;
+				break;
+
+			// Select mode
+			case 'select-mode-single':
+				selectMode = SelectMode.Single;
+				clearSelections();
+				break;
+			case 'select-mode-multiple':
+				selectMode = SelectMode.Multiple;
+				break;
+			case 'select-mode-clear':
+				clearSelections();
+				break;
+			case 'colour-1':
+			case 'colour-2':
+			case 'colour-3':
+			case 'colour-4':
+				handleColour(command);
+				break;
+
+			// Navigation
+			case 'ArrowLeft':
+			case 'ArrowRight':
+			case 'ArrowUp':
+			case 'ArrowDown':
+				if (selectMode === SelectMode.Single) moveSelection(command);
+				break;
+			case 'Backspace':
+				clearSelectedEntries();
+				break;
+
+			// Commands
+			case 'fix-pencil-marks':
+				fixPencilMarks();
+				break;
+			case 'highlight-conflicts':
+				showConflicts();
+				break;
+			case 'save':
+				saveBoard();
+				break;
+			case 'restore':
+				restoreBoard();
+				break;
+			case 'restart':
+				restart();
+				break;
+			case 'clear-board':
+				clearBoard();
+				break;
+		}
+
+		command = '';
 	}
+
+	// $: if (selectMode === SelectMode.Clear) {
+	// 	console.log('Board: Clearing selection');
+	// 	clearSelections();
+	// 	selectMode = SelectMode.Single;
+	// }
 
 	// -----------------------------------------------------------------------------
 	// @section Functions
 	// -----------------------------------------------------------------------------
+
+	function setNumber(number: number) {
+		if (mode === Mode.Initialise || mode == Mode.EnterValue) {
+			setValue(number);
+		} else if (mode === Mode.PencilIn) {
+			toggleOptions(number);
+		}
+	}
 
 	function initialise() {
 		for (let row = 0; row < ROWS; row++) {
@@ -124,6 +198,7 @@
 	function clearSelections() {
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
+				grid[a][b].colours = [];
 				grid[a][b].selected = false;
 			});
 		});
@@ -145,6 +220,7 @@
 				if (cell.selected && cell.initialised === false) {
 					grid[a][b].value = 0;
 					grid[a][b].options = [];
+					grid[a][b].colours = [];
 					grid[a][b].paired = false;
 				}
 			});
@@ -376,17 +452,17 @@
 		});
 	}
 
-	function handleColour(event: any) {
-		const colour = event.detail.colour;
-		console.log('new colour', colour);
+	function handleColour(colour: string) {
+		const index = parseInt(colour.split('-')[1]);
+		console.log('new colour', index);
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
 				if (cell.selected) {
 					let colours = cell.colours;
-					if (colours.includes(colour)) {
-						colours = colours.filter((c) => c !== colour);
+					if (colours.includes(index)) {
+						colours = colours.filter((c) => c !== index);
 					} else {
-						colours.push(colour);
+						colours.push(index);
 					}
 					grid[a][b].colours = [...colours];
 				}
@@ -408,77 +484,79 @@
 			angle += inc;
 		}
 		style += `);`;
-		console.log('style', style);
+		// console.log('style', style);
 		return style;
 	}
 
-	function handleKeydown(event: KeyboardEvent) {
-		console.log('keydown', event, event.key);
+	// function handleKeydown(event: KeyboardEvent) {
+	// 	console.log('keydown', event, event.key);
 
-		// Get the number from the key or the code
-		let num: number = Number(event.key);
-		console.log('Number', num);
+	// 	// Get the number from the key or the code
+	// 	let num: number = Number(event.key);
+	// 	console.log('Number', num);
 
-		// Check none-numbers first
-		if (isNaN(num)) {
-			switch (event.key) {
-				// case 'f':
-				// 	fixPencilMarks();
-				// 	break;
-				// case 'i':
-				// 	mode = mode === Mode.Initialise ? Mode.EnterValue : Mode.Initialise;
-				// 	break;
-				// case 'p':
-				// 	mode = Mode.PencilIn;
-				// 	break;
-				// case 'e':
-				// 	mode = Mode.EnterValue;
-				// 	break;
-				// case 'r':
-				// 	restart();
-				// 	break;
-				// case 's':
-				// 	selectMode = SelectMode.Single;
-				// 	break;
-				// case 'm':
-				// 	selectMode = SelectMode.Multiple;
-				// 	break;
-				// case 'c':
-				// 	clearSelections();
-				// 	break;
-				// case 'b':
-				// 	clearBoard();
-				// 	break;
-				// case 'h':
-				// 	showConflicts();
-				// 	break;
-				// case 'v':
-				// 	saveBoard();
-				// 	break;
-				// case 'o':
-				// 	restoreBoard();
-				// 	break;
-				case 'ArrowLeft':
-				case 'ArrowRight':
-				case 'ArrowUp':
-				case 'ArrowDown':
-					event.preventDefault();
-					if (selectMode === SelectMode.Single) moveSelection(event.key);
-					break;
-				case 'Backspace':
-					clearSelectedEntries();
-					break;
-			}
-			// Otherwise enter the number as a value or toggle a pencilled option
-			// Values and pencil marks are entered in all selected cells
-		} else {
-			if (mode === Mode.Initialise || mode == Mode.EnterValue) {
-				setValue(num);
-			} else if (mode === Mode.PencilIn) {
-				toggleOptions(num);
-			}
-		}
-	}
+	// 	// Check none-numbers first
+	// 	if (isNaN(num)) {
+	// 		switch (
+	// 			event.key
+	// 			// case 'f':
+	// 			// 	fixPencilMarks();
+	// 			// 	break;
+	// 			// case 'i':
+	// 			// 	mode = mode === Mode.Initialise ? Mode.EnterValue : Mode.Initialise;
+	// 			// 	break;
+	// 			// case 'p':
+	// 			// 	mode = Mode.PencilIn;
+	// 			// 	break;
+	// 			// case 'e':
+	// 			// 	mode = Mode.EnterValue;
+	// 			// 	break;
+	// 			// case 'r':
+	// 			// 	restart();
+	// 			// 	break;
+	// 			// case 's':
+	// 			// 	selectMode = SelectMode.Single;
+	// 			// 	break;
+	// 			// case 'm':
+	// 			// 	selectMode = SelectMode.Multiple;
+	// 			// 	break;
+	// 			// case 'c':
+	// 			// 	clearSelections();
+	// 			// 	break;
+	// 			// case 'b':
+	// 			// 	clearBoard();
+	// 			// 	break;
+	// 			// case 'h':
+	// 			// 	showConflicts();
+	// 			// 	break;
+	// 			// case 'v':
+	// 			// 	saveBoard();
+	// 			// 	break;
+	// 			// case 'o':
+	// 			// 	restoreBoard();
+	// 			// 	break;
+	// 			// case 'ArrowLeft':
+	// 			// case 'ArrowRight':
+	// 			// case 'ArrowUp':
+	// 			// case 'ArrowDown':
+	// 			// 	event.preventDefault();
+	// 			// 	if (selectMode === SelectMode.Single) moveSelection(event.key);
+	// 			// 	break;
+	// 			// case 'Backspace':
+	// 			// 	clearSelectedEntries();
+	// 			// 	break;
+	// 		) {
+	// 		}
+	// 		// Otherwise enter the number as a value or toggle a pencilled option
+	// 		// Values and pencil marks are entered in all selected cells
+	// 	} else {
+	// 		// if (mode === Mode.Initialise || mode == Mode.EnterValue) {
+	// 		// 	setValue(num);
+	// 		// } else if (mode === Mode.PencilIn) {
+	// 		// 	toggleOptions(num);
+	// 		// }
+	// 	}
+	// }
 
 	// function handleKeyup(event: KeyboardEvent) {
 	// 	console.log('keyup', event, event.key);
@@ -491,7 +569,7 @@
 @section HTML
 -------------------------------------------------------------------------------->
 
-<svelte:window on:resize={setCellHeight} on:keydown={handleKeydown} />
+<svelte:window on:resize={setCellHeight} />
 
 <div class="container">
 	<h1>Sudoku Board</h1>
@@ -538,36 +616,6 @@
 
 -------------------------------------------------------------------------------->
 <style>
-	:global(:root) {
-		/* Variables */
-		--primary-colour: rgb(84, 79, 97);
-		--primary-colour-lighter: rgb(187, 198, 214);
-		--select-colour: rgb(240, 240, 240);
-
-		--font-colour: rgb(82, 80, 85);
-		--font-colour-light: rgb(125, 123, 123);
-		--font-colour-initial: rgb(245, 240, 240);
-		--font-colour-error: red;
-
-		--background-colour-1: rgb(220, 127, 127);
-		--background-colour-2: rgb(163, 212, 159);
-		--background-colour-3: rgb(152, 149, 245);
-		--background-colour-4: rgb(241, 244, 90);
-
-		color: var(--font-colour);
-	}
-
-	:global(body) {
-		width: 90vw;
-		margin: 0;
-	}
-
-	:global(body *) {
-		box-sizing: border-box;
-		font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode',
-			Geneva, Verdana, sans-serif;
-	}
-
 	.container {
 		display: flex;
 		flex-direction: column;
@@ -607,14 +655,11 @@
 		padding: 0;
 		border: 1px solid var(--primary-colour-lighter);
 		background-color: white;
+		cursor: pointer;
 	}
 
 	.board.initialising .cell.initialised {
 		background-color: var(--font-colour-initial);
-	}
-
-	.cell.selected {
-		background-color: var(--select-colour);
 	}
 
 	.cell.top {
@@ -635,6 +680,15 @@
 
 	.cell.error .value {
 		color: var(--font-colour-error);
+	}
+
+	.cell.selected {
+		/* background-color: var(--select-colour); */
+		/* border: 1px solid rgb(69, 32, 32); */
+		outline: auto;
+		outline-color: red;
+		outline-width: 3px;
+		outline-offset: 0px;
 	}
 
 	.options {

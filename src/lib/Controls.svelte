@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Mode, SelectMode } from './types';
+	import { Mode, SelectMode } from './types';
 
 	import ModeController from './ModeController.svelte';
 	import SelectModeController from './SelectModeController.svelte';
@@ -11,11 +11,11 @@
 </script>
 
 <div class="controls mode" title="mode">
-	<ModeController bind:mode />
+	<ModeController {mode} on:command />
 </div>
 
 <div class="controls select" title="Cell selection">
-	<SelectModeController bind:selectMode />
+	<SelectModeController {selectMode} on:command />
 </div>
 
 <div class="controls commands" title="Commands">

@@ -4,27 +4,7 @@
 	import Group from './Group.svelte';
 
 	export let mode: Mode;
-
-	$: console.log('ModeController: mode changed to', mode);
-
-	function handleKeydown(event: KeyboardEvent) {
-		const key = event.key;
-		console.log('ModeController: detected key', key);
-		switch (key) {
-			case 'i':
-				mode = mode === Mode.Initialise ? Mode.EnterValue : Mode.Initialise;
-				break;
-			case 'e':
-				mode = Mode.EnterValue;
-				break;
-			case 'p':
-				mode = Mode.PencilIn;
-				break;
-		}
-	}
 </script>
-
-<svelte:window on:keydown={handleKeydown} />
 
 <Group>
 	<Choice
@@ -32,7 +12,9 @@
 		title="Use this mode to set up the starting values on the board"
 		label="_I_nitialise"
 		choice={Mode.Initialise}
+		command="initialise"
 		bind:value={mode}
+		on:command
 	/>
 
 	<Choice
@@ -41,6 +23,8 @@
 		label="_E_nter value"
 		choice={Mode.EnterValue}
 		bind:value={mode}
+		command="enter-value"
+		on:command
 	/>
 
 	<Choice
@@ -49,5 +33,7 @@
 		label="_P_encil in"
 		choice={Mode.PencilIn}
 		bind:value={mode}
+		command="pencil-in"
+		on:command
 	/>
 </Group>

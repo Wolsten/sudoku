@@ -235,8 +235,6 @@
 		border-top: 1px solid var(--primary-colour-lighter);
 		border-bottom: 1px solid var(--primary-colour-lighter);
 		border-left: 1px solid var(--primary-colour-lighter);
-
-		--border-radius: 0.3rem;
 	}
 
 	.controls label:hover {

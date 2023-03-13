@@ -1,27 +1,26 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 
+	import { registerCommand } from './utils';
+
 	export let title = '';
 	export let label = '';
 	export let disabled = false;
+	export let command = '';
 
 	// Find the shortcut key - character between two underscores
-	const match = label.match(/.?_(.?)_.?/gm);
-	console.log('label', label, 'match', match);
-	const shortcut = match ? match[1].toLowerCase() : 'UNKNOWN';
+	const shortcut = registerCommand(label, command);
 
 	const dispatch = createEventDispatcher();
 
-	label = label.replace('_', '<span class="shortcut">').replace('_', '</span>');
-
 	function handleClick() {
-		console.log('Dispatching command', shortcut);
-		dispatch('command', { shortcut });
+		console.log('Dispatching command', command);
+		dispatch('command', { command });
 	}
 </script>
 
 <button {title} {disabled} on:click={handleClick}>
-	{@html label}
+	{shortcut.pre}<span class="shortcut">{shortcut.shortcut}</span>{shortcut.post}
 </button>
 
 <style>
