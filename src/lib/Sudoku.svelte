@@ -7,13 +7,14 @@
 
 	let mode: Mode = Mode.EnterValue;
 	let selectMode: SelectMode = SelectMode.Single;
-	let number = 0;
 	let setCommand: any;
 	let setNumber: any;
 
 	function handleCommand(event: any) {
 		let command = event.detail.command;
-		console.log('Sudoku: handling command', command);
+		if (command === 'initialise') {
+			mode = Mode.Initialise;
+		}
 		setCommand(command);
 	}
 
@@ -33,6 +34,11 @@
 			if (shortcuts.has(event.key)) {
 				const command = shortcuts.get(event.key);
 				console.log('Sudoku: handling shortcut', command);
+
+				if (command === 'initialise') {
+					mode = Mode.Initialise;
+				}
+
 				setCommand(command);
 			}
 		} else {

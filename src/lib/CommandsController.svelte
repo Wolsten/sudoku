@@ -4,9 +4,9 @@
 </script>
 
 <Command
-	title="Lock pencil marks in selected cells"
-	label="_F_ix pencil marks"
-	command="fix-pencil-marks"
+	title="Set up the starting values on the board"
+	label="_I_nitialise board"
+	command="initialise"
 	on:command
 />
 

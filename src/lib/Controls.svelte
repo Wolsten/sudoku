@@ -1,20 +1,21 @@
 <script lang="ts">
-	import { Mode, SelectMode } from './types';
+	import type { Mode, SelectMode } from './types';
 
 	import ModeController from './ModeController.svelte';
 	import SelectModeController from './SelectModeController.svelte';
 	import CommandsController from './CommandsController.svelte';
 
-	// These values must be bound
 	export let mode: Mode;
 	export let selectMode: SelectMode;
+
+	$: console.log('Controls:mode', mode);
 </script>
 
-<div class="controls mode" title="mode">
+<div class="controls mode" title="Values">
 	<ModeController {mode} on:command on:number />
 </div>
 
-<div class="controls select" title="Cell selection">
+<div class="controls select" title="Selections">
 	<SelectModeController {selectMode} on:command />
 </div>
 

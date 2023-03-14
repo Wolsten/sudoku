@@ -49,7 +49,7 @@
 		switch (command) {
 			// Mode
 			case 'initialise':
-				mode = mode === Mode.Initialise ? Mode.EnterValue : Mode.Initialise;
+				mode = Mode.Initialise;
 				break;
 			case 'enter-value':
 				mode = Mode.EnterValue;
