@@ -34,6 +34,7 @@
 	button:not([disabled]):hover {
 		background-color: var(--primary-colour);
 		color: white;
+		cursor: pointer;
 	}
 
 	button[disabled] {

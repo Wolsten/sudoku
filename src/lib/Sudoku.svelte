@@ -8,38 +8,45 @@
 	let mode: Mode = Mode.EnterValue;
 	let selectMode: SelectMode = SelectMode.Single;
 	let number = 0;
-	let set: any;
+	let setCommand: any;
+	let setNumber: any;
 
 	function handleCommand(event: any) {
 		let command = event.detail.command;
 		console.log('Sudoku: handling command', command);
-		set(command);
+		setCommand(command);
+	}
+
+	function handleNumber(event: any) {
+		let number = event.detail.number;
+		console.log('Number', number);
+		setNumber(number);
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
 		event.preventDefault();
 		console.log('shortcuts', shortcuts);
 
-		const num: number = Number(event.key);
+		const number: number = Number(event.key);
 
-		if (isNaN(num)) {
+		if (isNaN(number)) {
 			if (shortcuts.has(event.key)) {
 				const command = shortcuts.get(event.key);
 				console.log('Sudoku: handling shortcut', command);
-				set(command);
+				setCommand(command);
 			}
 		} else {
-			console.log('Number', num);
-			number = num;
+			console.log('Number', number);
+			setNumber(number);
 		}
 	}
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
 
-<Board {mode} {selectMode} {number} bind:set />
+<Board {mode} {selectMode} bind:setCommand bind:setNumber />
 
-<Controls {mode} {selectMode} on:command={handleCommand} />
+<Controls {mode} {selectMode} on:command={handleCommand} on:number={handleNumber} />
 
 <style>
 	:global(:root) {

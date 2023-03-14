@@ -11,7 +11,7 @@
 </script>
 
 <div class="controls mode" title="mode">
-	<ModeController {mode} on:command />
+	<ModeController {mode} on:command on:number />
 </div>
 
 <div class="controls select" title="Cell selection">

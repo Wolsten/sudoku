@@ -8,7 +8,6 @@
 
 	export let mode: Mode;
 	export let selectMode: SelectMode;
-	export let number: number;
 
 	const ROWS = 9;
 	const COLS = 9;
@@ -16,13 +15,8 @@
 
 	let grid: Cell[][] = [];
 	let lastClicked = 0;
-
-	let command = '';
-
 	let selectedCell: SelectedCell = { row: -1, col: -1 };
 	let visible = false;
-
-	// $: console.log('board mode', mode);
 
 	// Register keys
 	registerKey('ArrowLeft');
@@ -41,18 +35,15 @@
 		setCellHeight();
 	});
 
-	$: if (number !== -1) {
-		console.log('Board: number=', number);
-		setNumber(number);
-		number = -1;
-	}
-
-	export const set = function (c: string) {
-		console.log('update set command', c);
-		command = c;
+	export const setNumber = function (n: number) {
+		if (mode === Mode.Initialise || mode == Mode.EnterValue) {
+			setValue(n);
+		} else if (mode === Mode.PencilIn) {
+			toggleOptions(n);
+		}
 	};
 
-	$: if (command !== '') {
+	export const setCommand = function (command: string) {
 		console.log('Board: command=', command);
 
 		switch (command) {
@@ -116,9 +107,7 @@
 				clearBoard();
 				break;
 		}
-
-		command = '';
-	}
+	};
 
 	// $: if (selectMode === SelectMode.Clear) {
 	// 	console.log('Board: Clearing selection');
@@ -130,14 +119,6 @@
 	// @section Functions
 	// -----------------------------------------------------------------------------
 
-	function setNumber(number: number) {
-		if (mode === Mode.Initialise || mode == Mode.EnterValue) {
-			setValue(number);
-		} else if (mode === Mode.PencilIn) {
-			toggleOptions(number);
-		}
-	}
-
 	function initialise() {
 		for (let row = 0; row < ROWS; row++) {
 			grid[row] = [];
@@ -147,7 +128,7 @@
 					selected: false,
 					options: [],
 					colours: [],
-					paired: false,
+					fixed: false,
 					initialised: false,
 					error: false
 				};
@@ -163,18 +144,6 @@
 				}
 			}
 		}
-	}
-
-	function handleMode(event: any) {
-		mode = event.detail.mode;
-		console.log('New mode', mode);
-		if (mode === Mode.Initialise) cellClicked(0, 0);
-	}
-
-	function handleSelectMode(event: any) {
-		selectMode = event.detail.selectMode;
-		console.log('New select mode', selectMode);
-		if (selectMode === SelectMode.Single || SelectMode.Multiple) clearSelections();
 	}
 
 	function setCellHeight() {
@@ -208,7 +177,7 @@
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
 				if (cell.selected) {
-					grid[a][b].paired = !cell.paired;
+					grid[a][b].fixed = !cell.fixed;
 				}
 			});
 		});
@@ -221,7 +190,7 @@
 					grid[a][b].value = 0;
 					grid[a][b].options = [];
 					grid[a][b].colours = [];
-					grid[a][b].paired = false;
+					grid[a][b].fixed = false;
 				}
 			});
 		});
@@ -234,7 +203,7 @@
 				grid[a][b].selected = false;
 				grid[a][b].options = [];
 				grid[a][b].colours = [];
-				grid[a][b].paired = false;
+				grid[a][b].fixed = false;
 				grid[a][b].initialised = false;
 				grid[a][b].error = false;
 			});
@@ -325,18 +294,18 @@
 	}
 
 	function setValue(num: number) {
-		// let setRow = -1;
-		// let setCol = -1;
 		console.log('setting value');
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
 				if (cell.selected) {
 					console.log('setting value cell', a, b, mode);
 					if (mode === Mode.EnterValue && cell.initialised === false) {
-						grid[a][b].value = num;
+						if (grid[a][b].value === num) {
+							grid[a][b].value = 0;
+						} else {
+							grid[a][b].value = num;
+						}
 					} else if (mode === Mode.Initialise) {
-						// setRow = a;
-						// setCol = b;
 						console.log('Setting cell to initialised', a, b);
 						grid[a][b].value = num;
 						grid[a][b].initialised = true;
@@ -412,7 +381,7 @@
 				if (cell.initialised === false) {
 					grid[a][b].value = 0;
 					grid[a][b].options = [];
-					grid[a][b].paired = false;
+					grid[a][b].fixed = false;
 				}
 			});
 		});
@@ -427,7 +396,7 @@
 					selected: cell.selected,
 					options: [...cell.options],
 					colours: [...cell.colours],
-					paired: cell.paired,
+					fixed: cell.fixed,
 					initialised: cell.initialised,
 					error: cell.error
 				};
@@ -444,7 +413,7 @@
 					selected: cell.selected,
 					options: [...cell.options],
 					colours: [...cell.colours],
-					paired: cell.paired,
+					fixed: cell.fixed,
 					initialised: cell.initialised,
 					error: cell.error
 				};
@@ -487,82 +456,6 @@
 		// console.log('style', style);
 		return style;
 	}
-
-	// function handleKeydown(event: KeyboardEvent) {
-	// 	console.log('keydown', event, event.key);
-
-	// 	// Get the number from the key or the code
-	// 	let num: number = Number(event.key);
-	// 	console.log('Number', num);
-
-	// 	// Check none-numbers first
-	// 	if (isNaN(num)) {
-	// 		switch (
-	// 			event.key
-	// 			// case 'f':
-	// 			// 	fixPencilMarks();
-	// 			// 	break;
-	// 			// case 'i':
-	// 			// 	mode = mode === Mode.Initialise ? Mode.EnterValue : Mode.Initialise;
-	// 			// 	break;
-	// 			// case 'p':
-	// 			// 	mode = Mode.PencilIn;
-	// 			// 	break;
-	// 			// case 'e':
-	// 			// 	mode = Mode.EnterValue;
-	// 			// 	break;
-	// 			// case 'r':
-	// 			// 	restart();
-	// 			// 	break;
-	// 			// case 's':
-	// 			// 	selectMode = SelectMode.Single;
-	// 			// 	break;
-	// 			// case 'm':
-	// 			// 	selectMode = SelectMode.Multiple;
-	// 			// 	break;
-	// 			// case 'c':
-	// 			// 	clearSelections();
-	// 			// 	break;
-	// 			// case 'b':
-	// 			// 	clearBoard();
-	// 			// 	break;
-	// 			// case 'h':
-	// 			// 	showConflicts();
-	// 			// 	break;
-	// 			// case 'v':
-	// 			// 	saveBoard();
-	// 			// 	break;
-	// 			// case 'o':
-	// 			// 	restoreBoard();
-	// 			// 	break;
-	// 			// case 'ArrowLeft':
-	// 			// case 'ArrowRight':
-	// 			// case 'ArrowUp':
-	// 			// case 'ArrowDown':
-	// 			// 	event.preventDefault();
-	// 			// 	if (selectMode === SelectMode.Single) moveSelection(event.key);
-	// 			// 	break;
-	// 			// case 'Backspace':
-	// 			// 	clearSelectedEntries();
-	// 			// 	break;
-	// 		) {
-	// 		}
-	// 		// Otherwise enter the number as a value or toggle a pencilled option
-	// 		// Values and pencil marks are entered in all selected cells
-	// 	} else {
-	// 		// if (mode === Mode.Initialise || mode == Mode.EnterValue) {
-	// 		// 	setValue(num);
-	// 		// } else if (mode === Mode.PencilIn) {
-	// 		// 	toggleOptions(num);
-	// 		// }
-	// 	}
-	// }
-
-	// function handleKeyup(event: KeyboardEvent) {
-	// 	console.log('keyup', event, event.key);
-	// 	if (event.key === 'Meta') metaKey = false;
-	// 	if (event.key === 'Shift') shiftKey = false;
-	// }
 </script>
 
 <!------------------------------------------------------------------------------
@@ -595,7 +488,7 @@
 						on:pointerdown={() => cellClicked(a, b)}
 					>
 						{#if cell.value === 0 && optionsString !== ''}
-							<span class="options" class:paired={cell.paired}>
+							<span class="options" class:fixed={cell.fixed}>
 								{optionsString}
 							</span>
 						{/if}
@@ -699,7 +592,7 @@
 		line-height: 0.8rem;
 	}
 
-	.options.paired {
+	.options.fixed {
 		position: absolute;
 		top: 0;
 		left: 0;
@@ -708,7 +601,7 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		font-size: 0.8rem;
+		font-weight: bold;
 	}
 
 	.value {

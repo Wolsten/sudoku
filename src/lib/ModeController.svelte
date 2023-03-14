@@ -2,6 +2,7 @@
 	import { Mode } from './types';
 	import Choice from './Choice.svelte';
 	import Group from './Group.svelte';
+	import Keypad from './Keypad.svelte';
 
 	export let mode: Mode;
 </script>
@@ -15,6 +16,7 @@
 		command="initialise"
 		bind:value={mode}
 		on:command
+		on:number
 	/>
 
 	<Choice
@@ -36,4 +38,8 @@
 		command="pencil-in"
 		on:command
 	/>
+</Group>
+
+<Group>
+	<Keypad on:number />
 </Group>
