@@ -3,7 +3,6 @@
 
 	import ModeController from './ModeController.svelte';
 	import SelectModeController from './SelectModeController.svelte';
-	import CommandsController from './CommandsController.svelte';
 
 	export let mode: Mode;
 	export let selectMode: SelectMode;
@@ -19,14 +18,10 @@
 	<SelectModeController {selectMode} on:command />
 </div>
 
-<div class="controls commands" title="Commands">
-	<CommandsController on:command />
-</div>
-
 <style>
 	.controls {
 		margin-top: 1rem;
-		width: 94%;
+		/* width: 94%; */
 		display: flex;
 		flex-wrap: wrap;
 		justify-content: flex-start;

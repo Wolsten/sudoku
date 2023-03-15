@@ -439,7 +439,7 @@
 		});
 	}
 
-	function getPieStyle(colours: number[]): string {
+	function getStyle(colours: number[]): string {
 		if (colours.length === 0) return '';
 		const inc = 360 / colours.length;
 		let angle = 0;
@@ -464,16 +464,29 @@
 
 <svelte:window on:resize={setCellHeight} />
 
-<div class="container">
-	<h1>Sudoku Board</h1>
+<div class="board-grid visible">
+	{#each [1, 2, 3, 4, 5, 6, 7, 8, 9] as row}
+		<span class="cell">&nbsp;</span>
+		<span class="cell">&nbsp;</span>
+		<span class="cell">&nbsp;</span>
+		<span class="cell">&nbsp;</span>
+		<span class="cell">&nbsp;</span>
+		<span class="cell">&nbsp;</span>
+		<span class="cell">&nbsp;</span>
+		<span class="cell">&nbsp;</span>
+		<span class="cell">&nbsp;</span>
+	{/each}
+</div>
 
+<h2>TESTING</h2>
+
+<div class="XXXcontainer">
 	<div class="board" class:visible class:initialising={mode === Mode.Initialise}>
 		{#each grid as row, a}
 			<div class="row">
-				<!-- <span class="label">{a + 1}</span> -->
 				{#each row as cell, b}
 					{@const optionsString = cell.options ? cell.options.sort((a, b) => a - b).join(' ') : ''}
-					{@const backgroundStyle = getPieStyle(cell.colours)}
+					{@const style = getStyle(cell.colours)}
 					<span
 						class="cell"
 						class:top={a % BOX === 0}
@@ -483,7 +496,7 @@
 						class:selected={cell.selected}
 						class:initialised={cell.initialised}
 						class:error={cell.error}
-						style={backgroundStyle}
+						{style}
 						bind:this={cell.dom}
 						on:pointerdown={() => cellClicked(a, b)}
 					>
@@ -518,25 +531,34 @@
 	.board {
 		position: relative;
 		visibility: hidden;
-		position: relative;
 		width: 100%;
-		max-width: 600px;
-		padding: 0 0.5rem;
+		/* max-width: 600px; */
+	}
+
+	.board-grid {
+		display: grid;
+
+		grid-template-rows: repeat(9, 1fr);
+		grid-template-columns: repeat(9, 1fr);
+
+		gap: 0px;
+		/* height: 100%; */
+
+		width: 100%;
+		max-width: 100%;
 	}
 
 	.board.visible {
 		visibility: visible;
 	}
 
-	h1 {
-		text-align: center;
-		position: relative;
-	}
-
 	.row {
-		display: grid;
-		grid-auto-columns: minmax(0, 1fr);
-		grid-auto-flow: column;
+		/* display: grid;
+		grid-auto-columns: minmax(50px, 1fr);
+		grid-auto-flow: column; */
+		display: inline-block;
+		margin: 0;
+		padding: 0;
 	}
 
 	.label {
@@ -545,17 +567,26 @@
 
 	.cell {
 		position: relative;
+		margin: 0;
 		padding: 0;
 		border: 1px solid var(--primary-colour-lighter);
 		background-color: white;
 		cursor: pointer;
+
+		/* display: inline-block; */
+		/* width: 50px;
+		height: 50px; */
+
+		width: calc(100% / 9);
+
+		box-sizing: border-box;
 	}
 
 	.board.initialising .cell.initialised {
 		background-color: var(--font-colour-initial);
 	}
 
-	.cell.top {
+	/* .cell.top {
 		border-top-color: var(--primary-colour);
 	}
 
@@ -569,13 +600,13 @@
 
 	.cell.right {
 		border-right-color: var(--primary-colour);
-	}
+	} */
 
 	.cell.error .value {
 		color: var(--font-colour-error);
 	}
 
-	.cell.selected {
+	XXX.cell.selected {
 		/* background-color: var(--select-colour); */
 		/* border: 1px solid rgb(69, 32, 32); */
 		outline: auto;
@@ -585,11 +616,14 @@
 	}
 
 	.options {
+		position: absolute;
+		top: 0;
+		left: 0;
 		display: inline-block;
-		padding: 0.1rem;
+		/* padding: 0.1rem; */
 		color: var(--font-colour-light);
 		font-size: 0.7rem;
-		line-height: 0.8rem;
+		line-height: 0.9rem;
 	}
 
 	.options.fixed {

@@ -4,18 +4,26 @@
 
 	import { Mode, SelectMode } from './types';
 	import { shortcuts } from './utils';
+	import Command from './Command.svelte';
+	import CommandsController from './CommandsController.svelte';
 
 	let mode: Mode = Mode.EnterValue;
 	let selectMode: SelectMode = SelectMode.Single;
 	let setCommand: any;
 	let setNumber: any;
+	let show = false;
 
 	function handleCommand(event: any) {
 		let command = event.detail.command;
 		if (command === 'initialise') {
 			mode = Mode.Initialise;
 		}
-		setCommand(command);
+		if (command === 'commands-menu') {
+			show = true;
+		} else {
+			show = false;
+			setCommand(command);
+		}
 	}
 
 	function handleNumber(event: any) {
@@ -26,6 +34,7 @@
 
 	function handleKeydown(event: KeyboardEvent) {
 		event.preventDefault();
+		console.log('key', event.key);
 		console.log('shortcuts', shortcuts);
 
 		const number: number = Number(event.key);
@@ -45,17 +54,36 @@
 			console.log('Number', number);
 			setNumber(number);
 		}
+
+		show = false;
 	}
 </script>
 
 <svelte:window on:keydown={handleKeydown} />
 
-<Board {mode} {selectMode} bind:setCommand bind:setNumber />
+<div class="container">
+	<h1>
+		Sudoku Board
 
-<Controls {mode} {selectMode} on:command={handleCommand} on:number={handleNumber} />
+		<div class="menu">
+			<Command
+				title="Commands menu"
+				label="Men_u_"
+				command="commands-menu"
+				on:command={handleCommand}
+			/>
+		</div>
+	</h1>
+
+	<Board {mode} {selectMode} bind:setCommand bind:setNumber />
+
+	<Controls {mode} {selectMode} on:command={handleCommand} on:number={handleNumber} />
+
+	<CommandsController on:command={handleCommand} {show} />
+</div>
 
 <style>
-	:global(:root) {
+	.container {
 		/* Variables */
 		--primary-colour: rgb(84, 79, 97);
 		--primary-colour-lighter: rgb(187, 198, 214);
@@ -74,16 +102,19 @@
 		--border-radius: 0.3rem;
 
 		color: var(--font-colour);
+
+		position: relative;
 	}
 
-	:global(body) {
-		width: 90vw;
-		margin: 0;
-	}
-
-	:global(body *) {
+	:global(.container *) {
 		box-sizing: border-box;
 		font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode',
 			Geneva, Verdana, sans-serif;
+	}
+
+	h1 {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
 	}
 </style>

@@ -5,7 +5,7 @@ export type Cell = {
     colours: number[];
     dom?: HTMLElement;
     selected: boolean;
-    paired: boolean;
+    fixed: boolean;
     error: boolean;
 };
 
@@ -24,4 +24,4 @@ export enum SelectMode {
 export type SelectedCell = {
     row: number;
     col: number;
-};
+}

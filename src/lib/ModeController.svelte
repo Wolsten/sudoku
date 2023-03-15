@@ -6,21 +6,12 @@
 	import Command from './Command.svelte';
 
 	export let mode: Mode;
+
+	let show = false;
 </script>
 
 <div class="column">
 	<Group>
-		<!-- <Choice
-			name="mode"
-			title="Use this mode to set up the starting values on the board"
-			label="_I_nitialise"
-			choice={Mode.Initialise}
-			command="initialise"
-			bind:value={mode}
-			on:command
-			on:number
-		/> -->
-
 		<Choice
 			name="mode"
 			title="Use this mode to add your (partial) solution to the board"
@@ -49,8 +40,6 @@
 			command="fix-pencil-marks"
 			on:command
 		/>
-
-		<Command title="Commands menu" label="Men_u_" command="commands-menu" on:command />
 	</div>
 </div>
 
