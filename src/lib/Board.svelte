@@ -15,7 +15,7 @@
 	let grid: Cell[][] = [];
 	let lastClicked = 0;
 	let selectedCell: SelectedCell = { row: -1, col: -1 };
-	let visible = true;
+	let visible = false;
 
 	// -----------------------------------------------------------------------------
 	// @section State handling
@@ -134,7 +134,6 @@
 
 	function setCellHeight() {
 		const width = grid[0][0].dom?.clientWidth;
-		console.log('width=', width);
 		grid.forEach((row) => {
 			row.forEach((cell) => {
 				if (cell.dom) {
@@ -285,7 +284,7 @@
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
 				if (cell.selected) {
-					console.log('setting value cell', a, b, mode);
+					// console.log('setting value cell', a, b, mode);
 					if (mode === Mode.EnterValue && cell.initialised === false) {
 						if (grid[a][b].value === num) {
 							grid[a][b].value = 0;
@@ -293,7 +292,7 @@
 							grid[a][b].value = num;
 						}
 					} else if (mode === Mode.Initialise) {
-						console.log('Setting cell to initialised', a, b);
+						// console.log('Setting cell to initialised', a, b);
 						grid[a][b].value = num;
 						grid[a][b].initialised = true;
 					}
