@@ -14,7 +14,7 @@
 	<Choice
 		name="selectMode"
 		title="Only allow single cell selections"
-		label="_S_ingle"
+		label="<i class='bi bi-check2'></i>"
 		command="select-mode-single"
 		choice={SelectMode.Single}
 		bind:value={selectMode}
@@ -24,7 +24,7 @@
 	<Choice
 		name="selectMode"
 		title="Allow multiple cell selections and value entry plus pencil marks"
-		label="_M_ultiple"
+		label="<i class='bi bi-check2-all'></i>"
 		command="select-mode-multiple"
 		choice={SelectMode.Multiple}
 		bind:value={selectMode}
@@ -35,7 +35,7 @@
 <Group>
 	<Command
 		title="Clear selections"
-		label="_C_lear"
+		label="<i class='bi bi-eraser'></i>"
 		command="select-mode-clear"
 		on:command={(event) => {
 			dispatch('command', { command: event.detail.command });
@@ -46,7 +46,10 @@
 
 <Group>
 	{#each [1, 2, 3, 4] as index}
-		<label style="background-color:var(--background-colour-{index});">
+		<label
+			style="background-color:var(--background-colour-{index});"
+			title="Toggle this colour in selected cell(s)"
+		>
 			&nbsp;
 			<input type="button" on:click={() => dispatch('command', { command: 'colour-' + index })} />
 		</label>

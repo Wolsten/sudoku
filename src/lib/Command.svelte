@@ -1,15 +1,10 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 
-	import { registerCommand } from './utils';
-
 	export let title = '';
 	export let label = '';
 	export let disabled = false;
 	export let command = '';
-
-	// Find the shortcut key - character between two underscores
-	const shortcut = registerCommand(label, command);
 
 	const dispatch = createEventDispatcher();
 
@@ -20,15 +15,16 @@
 </script>
 
 <button {title} {disabled} on:click={handleClick}>
-	{shortcut.pre}<span class="shortcut">{shortcut.shortcut}</span>{shortcut.post}
+	{@html label}
 </button>
 
 <style>
 	button {
 		background-color: white;
-		padding: 0.3rem 0.6rem;
+		padding: 0.1rem 0.3rem;
 		border: 1px solid var(--primary-colour-lighter);
-		border-radius: 0.2rem;
+		border-radius: var(--border-radius);
+		font-size: 1.2rem;
 	}
 
 	button:not([disabled]):hover {

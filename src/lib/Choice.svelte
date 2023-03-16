@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { registerCommand } from './utils';
 	export let name = '';
 	export let title = '';
 	export let label = '';
@@ -9,13 +8,10 @@
 	export let command = '';
 
 	const dispatch = createEventDispatcher();
-
-	// Find the shortcut key - character between two underscores
-	const shortcut = registerCommand(label, command);
 </script>
 
 <label {title} class:active={value === choice}>
-	<span>{shortcut.pre}<span class="shortcut">{shortcut.shortcut}</span>{shortcut.post}</span>
+	<span>{@html label}</span>
 	<input
 		type="radio"
 		{name}
@@ -39,7 +35,9 @@
 		-ms-user-select: none;
 		user-select: none;
 
-		padding: 0.25rem 0.4rem;
+		padding: 0.1rem 0.3rem;
+		font-size: 1.2rem;
+
 		border-top: 1px solid var(--primary-colour-lighter);
 		border-bottom: 1px solid var(--primary-colour-lighter);
 		border-left: 1px solid var(--primary-colour-lighter);

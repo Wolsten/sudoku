@@ -2,63 +2,55 @@
 	import type { Mode, SelectMode } from './types';
 
 	import ModeController from './ModeController.svelte';
+	import Keypad from './Keypad.svelte';
 	import SelectModeController from './SelectModeController.svelte';
 
 	export let mode: Mode;
 	export let selectMode: SelectMode;
 
-	$: console.log('Controls:mode', mode);
+	// $: console.log('Controls:mode', mode);
 </script>
 
-<div class="controls mode" title="Values">
-	<ModeController {mode} on:command on:number />
-</div>
+<div class="container">
+	<div class="controls mode" title="Values">
+		<ModeController {mode} on:command />
+	</div>
 
-<div class="controls select" title="Selections">
-	<SelectModeController {selectMode} on:command />
+	<div class="controls keypad" title="Keypad">
+		<Keypad on:number />
+	</div>
+
+	<div class="controls select" title="Selections">
+		<SelectModeController {selectMode} on:command />
+	</div>
 </div>
 
 <style>
+	.container {
+		display: flex;
+		justify-content: space-around;
+	}
+
 	.controls {
 		margin-top: 1rem;
-		/* width: 94%; */
 		display: flex;
 		flex-wrap: wrap;
-		justify-content: flex-start;
+		gap: 0.5rem;
+		justify-content: space-between;
 		border: 1px solid var(--primary-colour);
 		border-radius: 0.3rem;
-		gap: 1rem;
-		padding: 1rem;
-		margin: 1rem 3%;
+		padding: 1rem 0.5rem 0.5rem 0.5rem;
+		margin: 0.5rem 3%;
 		position: relative;
 	}
 
-	.controls::after {
+	.controls::before {
 		position: absolute;
 		top: -0.8rem;
-		left: 1rem;
+		left: 0.5rem;
 		font-size: 0.8rem;
 		background: white;
 		padding: 0.3rem;
 		content: attr(title);
-	}
-
-	:global(.controls .shortcut) {
-		display: inline-block;
-		border-bottom: 1px solid var(--font-colour);
-	}
-
-	:global(.controls label.active .shortcut) {
-		border-color: white;
-	}
-
-	.controls.commands {
-		gap: 1rem;
-	}
-
-	.controls .group.colours label {
-		border-color: transparent;
-		width: 1.4rem;
-		height: 1.4rem;
 	}
 </style>

@@ -3,7 +3,6 @@
 	import Board from './Board.svelte';
 
 	import { Mode, SelectMode } from './types';
-	import { shortcuts } from './utils';
 	import Command from './Command.svelte';
 	import CommandsController from './CommandsController.svelte';
 
@@ -19,7 +18,7 @@
 			mode = Mode.Initialise;
 		}
 		if (command === 'commands-menu') {
-			show = true;
+			show = !show;
 		} else {
 			show = false;
 			setCommand(command);
@@ -28,33 +27,18 @@
 
 	function handleNumber(event: any) {
 		let number = event.detail.number;
-		console.log('Number', number);
 		setNumber(number);
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
 		event.preventDefault();
-		console.log('key', event.key);
-		console.log('shortcuts', shortcuts);
-
+		// console.log('key', event.key);
 		const number: number = Number(event.key);
-
 		if (isNaN(number)) {
-			if (shortcuts.has(event.key)) {
-				const command = shortcuts.get(event.key);
-				console.log('Sudoku: handling shortcut', command);
-
-				if (command === 'initialise') {
-					mode = Mode.Initialise;
-				}
-
-				setCommand(command);
-			}
+			setCommand(event.key);
 		} else {
-			console.log('Number', number);
 			setNumber(number);
 		}
-
 		show = false;
 	}
 </script>
@@ -68,7 +52,7 @@
 		<div class="menu">
 			<Command
 				title="Commands menu"
-				label="Men_u_"
+				label="<i class='bi bi-list'></i>"
 				command="commands-menu"
 				on:command={handleCommand}
 			/>
@@ -83,6 +67,8 @@
 </div>
 
 <style>
+	@import url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css');
+
 	.container {
 		/* Variables */
 		--primary-colour: rgb(84, 79, 97);
@@ -94,16 +80,18 @@
 		--font-colour-initial: rgb(245, 240, 240);
 		--font-colour-error: red;
 
-		--background-colour-1: rgb(220, 127, 127);
-		--background-colour-2: rgb(163, 212, 159);
-		--background-colour-3: rgb(152, 149, 245);
-		--background-colour-4: rgb(241, 244, 90);
+		--background-colour-1: rgb(247, 156, 156);
+		--background-colour-2: rgb(126, 185, 121);
+		--background-colour-3: rgb(171, 169, 234);
+		--background-colour-4: rgb(67, 203, 224);
 
 		--border-radius: 0.3rem;
 
 		color: var(--font-colour);
 
 		position: relative;
+
+		padding: 0 10%;
 	}
 
 	:global(.container *) {
@@ -114,7 +102,16 @@
 
 	h1 {
 		display: flex;
-		justify-content: space-between;
+		justify-content: space-around;
 		align-items: center;
+	}
+
+	@media (max-width: 580px) {
+		.container {
+			padding: 0 0.1rem;
+		}
+		h1 {
+			font-size: 1.4rem;
+		}
 	}
 </style>

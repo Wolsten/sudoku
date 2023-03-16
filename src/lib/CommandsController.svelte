@@ -54,15 +54,20 @@
 
 <style>
 	.commands-menu {
-		display: none;
+		display: flex;
+		flex-direction: column;
 		position: fixed;
-		width: 100%;
+		width: 60%;
 		top: 0;
 		left: 0;
+		translate: 0 -300px;
+		transition: all 500ms;
+		opacity: 0;
 	}
 
 	.show {
 		display: flex;
-		flex-direction: column;
+		translate: 0 0;
+		opacity: 1;
 	}
 </style>
