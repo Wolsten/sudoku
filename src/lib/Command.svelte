@@ -24,7 +24,7 @@
 		padding: 0.1rem 0.3rem;
 		border: 1px solid var(--primary-colour-lighter);
 		border-radius: var(--border-radius);
-		font-size: 1.2rem;
+		font-size: 1.6rem;
 	}
 
 	button:not([disabled]):hover {

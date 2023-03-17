@@ -22,7 +22,7 @@
 	button {
 		background-color: var(--primary-colour);
 		color: white;
-
+		font-size: 1.2rem;
 		padding: 0.5rem 0.6rem;
 		border: 1px solid var(--primary-colour-lighter);
 		border-bottom: none;
@@ -40,6 +40,7 @@
 	}
 
 	button[disabled] {
+		color: var(--font-colour-light);
 		cursor: default;
 	}
 </style>

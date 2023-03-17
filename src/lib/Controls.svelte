@@ -16,9 +16,7 @@
 		<ModeController {mode} on:command />
 	</div>
 
-	<div class="controls keypad" title="Keypad">
-		<Keypad on:number />
-	</div>
+	<Keypad on:number />
 
 	<div class="controls select" title="Selections">
 		<SelectModeController {selectMode} on:command />

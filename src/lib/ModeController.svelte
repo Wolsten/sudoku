@@ -11,7 +11,7 @@
 	<Choice
 		name="mode"
 		title="Use this mode to add your (partial) solution to the board"
-		label="<i class='bi bi-pen-fill'></i>"
+		label="<i class='bi bi-pen'></i>"
 		choice={Mode.EnterValue}
 		bind:value={mode}
 		command="enter-value"

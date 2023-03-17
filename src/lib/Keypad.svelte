@@ -18,24 +18,28 @@
 	<button on:click={() => handleClick(7)}>7</button>
 	<button on:click={() => handleClick(8)}>8</button>
 	<button on:click={() => handleClick(9)}>9</button>
+	<button on:click={() => handleClick(0)}>0</button>
 </div>
 
 <style>
 	.keypad {
+		--keypad-size: 2.4rem;
 		display: grid;
-		grid-template-columns: repeat(3, 1.6rem);
-		grid-template-rows: repeat(3, 1.6rem);
-		grid-gap: 0.3em;
+		grid-template-columns: repeat(3, var(--keypad-size));
+		grid-template-rows: repeat(4, var(--keypad-size));
+		grid-gap: 0;
+
+		margin: 0.5rem;
 	}
 
 	button {
 		background-color: white;
-		padding: 0.3rem 0.6rem;
+		/* padding: 0.3rem 0.6rem; */
 		border: 1px solid var(--primary-colour-lighter);
-		border-radius: 0.2rem;
 		display: flex;
 		justify-content: center;
 		align-items: center;
+		font-size: 1.3rem;
 	}
 
 	button:hover {

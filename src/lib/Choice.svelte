@@ -24,7 +24,6 @@
 <style>
 	/* Customize the label (the container) */
 	label {
-		font-size: 0.9rem;
 		display: flex;
 		flex-direction: row-reverse;
 		align-items: center;
@@ -36,7 +35,7 @@
 		user-select: none;
 
 		padding: 0.1rem 0.3rem;
-		font-size: 1.2rem;
+		font-size: 1.6rem;
 
 		border-top: 1px solid var(--primary-colour-lighter);
 		border-bottom: 1px solid var(--primary-colour-lighter);

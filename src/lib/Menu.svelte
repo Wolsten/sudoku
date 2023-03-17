@@ -1,17 +1,25 @@
 <script lang="ts">
-	import { savedGrid } from './stores';
+	import { Mode } from './types';
 	import MenuItem from './MenuItem.svelte';
 
 	export let show = false;
+	export let mode: Mode;
+	export let restoreDisabled = true;
+
+	let title = '';
+	let label = '';
+
+	$: if (mode === Mode.Initialise) {
+		title = 'Finish initialisation and solve the puzzle';
+		label = 'Solve the puzzle';
+	} else {
+		title = 'Set up the starting values on the board';
+		label = 'Initialise board';
+	}
 </script>
 
 <div class="commands-menu" class:show>
-	<MenuItem
-		title="Set up the starting values on the board"
-		label="Initialise board"
-		command="initialise"
-		on:command
-	/>
+	<MenuItem {title} {label} command="initialise" on:command />
 
 	<MenuItem
 		title="Highlight conflicting cells in rows, columns and boxes"
@@ -31,7 +39,7 @@
 		title="Restore the previously saved state of the board"
 		label="Restore"
 		command="restore"
-		disabled={$savedGrid.length === 0}
+		disabled={restoreDisabled}
 		on:command
 	/>
 
@@ -49,6 +57,8 @@
 		on:command
 	/>
 
+	<MenuItem title="Show user guide" label="Help" command="help" on:command />
+
 	<MenuItem title="Close this menu" label="Close" command="close-menu" on:command />
 </div>
 
@@ -63,6 +73,7 @@
 		translate: 0 -300px;
 		transition: all 500ms;
 		opacity: 0;
+		box-shadow: 0.1rem 0.1rem 0.5rem var(--primary-colour);
 	}
 
 	.show {
