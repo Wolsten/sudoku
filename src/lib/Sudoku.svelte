@@ -14,6 +14,7 @@
 	const COLS = 9;
 	const BOX = 3;
 
+	let imageSrc = '';
 	let visible = false;
 	let ls: Storage | null;
 	let grid: Cell[][] = [];
@@ -75,6 +76,7 @@
 				break;
 			case 'enter-value':
 				mode = Mode.EnterValue;
+				imageSrc = '';
 				break;
 			case 'pencil-in':
 				mode = Mode.PencilIn;
@@ -159,6 +161,10 @@
 		show = false;
 	}
 
+	function handleImage(event: any) {
+		imageSrc = event.detail.imageSrc;
+	}
+
 	// -----------------------------------------------------------------------------
 	// @section Functions
 	// -----------------------------------------------------------------------------
@@ -166,21 +172,23 @@
 	function restoreBoard() {
 		if (!!ls) {
 			const localGrid = ls.getItem('grid') || '';
-			savedGrid = <Cell[][]>JSON.parse(localGrid);
-			savedGrid.forEach((row, a) => {
-				grid[a] = [];
-				row.forEach((cell, b) => {
-					grid[a][b] = {
-						value: cell.value,
-						selected: cell.selected,
-						options: [...cell.options],
-						colours: [...cell.colours],
-						fixed: cell.fixed,
-						initialised: cell.initialised,
-						error: cell.error
-					};
+			if (localGrid !== '') {
+				savedGrid = <Cell[][]>JSON.parse(localGrid);
+				savedGrid.forEach((row, a) => {
+					grid[a] = [];
+					row.forEach((cell, b) => {
+						grid[a][b] = {
+							value: cell.value,
+							selected: cell.selected,
+							options: [...cell.options],
+							colours: [...cell.colours],
+							fixed: cell.fixed,
+							initialised: cell.initialised,
+							error: cell.error
+						};
+					});
 				});
-			});
+			}
 			mode = Mode.EnterValue;
 		}
 	}
@@ -447,7 +455,7 @@
 	<h1>
 		Sudoku Board
 
-		<div class="menu">
+		<div class="menu" class:show>
 			<Command
 				title="Menu"
 				label="<i class='bi bi-list'></i>"
@@ -458,22 +466,25 @@
 	</h1>
 
 	{#if help === false}
-		<Board
-			{ROWS}
-			{COLS}
-			{BOX}
-			{grid}
-			{mode}
-			{selectMode}
-			on:command={handleCommand}
-			bind:selectedCell
-		/>
+		<div class="board-container">
+			<Board
+				{ROWS}
+				{COLS}
+				{BOX}
+				{grid}
+				{mode}
+				{selectMode}
+				{imageSrc}
+				on:command={handleCommand}
+				bind:selectedCell
+			/>
 
-		<Controls {mode} {selectMode} on:command={handleCommand} on:number={handleNumber} />
+			<Controls {mode} {selectMode} on:command={handleCommand} on:number={handleNumber} />
 
-		<Menu on:command={handleCommand} {show} {mode} restoreDisabled={savedGrid.length === 0} />
+			<Menu on:command={handleCommand} {show} {mode} restoreDisabled={savedGrid.length === 0} />
 
-		<Message {mode} />
+			<Message {mode} on:image={handleImage} />
+		</div>
 	{/if}
 
 	<Help {help} on:command={handleCommand} />
@@ -484,8 +495,8 @@
 
 	.container {
 		/* Variables */
-		--primary-colour: rgb(143, 136, 160);
-		--primary-colour-lighter: rgb(187, 198, 214);
+		--primary-colour: rgb(109, 101, 128);
+		--primary-colour-lighter: rgb(209, 217, 230);
 		--select-colour: rgb(240, 240, 240);
 
 		--font-colour: rgb(82, 80, 85);
@@ -538,5 +549,14 @@
 		h1 {
 			font-size: 1.4rem;
 		}
+	}
+
+	.menu {
+		transform: rotate(0deg);
+		transition: all 500ms;
+	}
+
+	.menu.show {
+		transform: rotate(-90deg);
 	}
 </style>

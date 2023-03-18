@@ -11,6 +11,7 @@
 	export let COLS: number;
 	export let BOX: number;
 	export let selectedCell: SelectedCell = { row: -1, col: -1 };
+	export let imageSrc = '';
 
 	const dispatch = createEventDispatcher();
 
@@ -100,6 +101,10 @@
 
 <div class="container">
 	<div class="board" class:initialising={mode === Mode.Initialise}>
+		{#if imageSrc !== '' && mode === Mode.Initialise}
+			<img src={imageSrc} />
+		{/if}
+
 		{#each grid as row, a}
 			{#each row as cell, b}
 				{@const optionsString = cell.options ? cell.options.sort((a, b) => a - b).join(' ') : ''}
@@ -167,6 +172,8 @@
 
 		border: 1px solid var(--primary-colour-lighter);
 		background-color: white;
+		opacity: 0.8;
+
 		cursor: pointer;
 		display: inline-block;
 	}
@@ -263,5 +270,13 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
+	}
+
+	img {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
 	}
 </style>

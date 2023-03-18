@@ -23,7 +23,7 @@
 		background-color: var(--primary-colour);
 		color: white;
 		font-size: 1.2rem;
-		padding: 0.5rem 0.6rem;
+		padding: 0.8rem 0.6rem;
 		border: 1px solid var(--primary-colour-lighter);
 		border-bottom: none;
 		width: 100%;

@@ -66,10 +66,10 @@
 	.commands-menu {
 		display: flex;
 		flex-direction: column;
-		position: fixed;
-		width: 60%;
-		top: 0;
-		left: 0;
+		position: absolute;
+		width: 250px;
+		top: -1rem;
+		right: 4rem;
 		translate: 0 -300px;
 		transition: all 500ms;
 		opacity: 0;
