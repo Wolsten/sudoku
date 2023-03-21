@@ -5,6 +5,7 @@
 	<meta charset="utf-8" />
 	<link rel="icon" href="%sveltekit.assets%/favicon.png" />
 	<meta name="viewport" content="width=device-width" />
+	<script src='https://unpkg.com/tesseract.js@4.0.2/dist/tesseract.min.js'></script>
 	%sveltekit.head%
 </head>
 
@@ -19,5 +20,28 @@
 <body data-sveltekit-preload-data="hover">
 	<div style="display: contents">%sveltekit.body%</div>
 </body>
+
+<script>
+
+
+	// async function processImage() {
+
+	// 	const worker = await Tesseract.createWorker();
+
+	// 	(async () => {
+	// 		await worker.loadLanguage('eng');
+	// 		await worker.initialize('eng');
+	// 		const {
+	// 			data: { text }
+	// 		} = await worker.recognize('https://tesseract.projectnaptha.com/img/eng_bw.png');
+	// 		console.log(text);
+	// 		await worker.terminate();
+	// 	})();
+	// }
+
+
+	// processImage();
+
+</script>
 
 </html>

@@ -69,8 +69,8 @@
 		position: absolute;
 		width: 250px;
 		top: -1rem;
-		right: 4rem;
-		translate: 0 -300px;
+		left: 0rem;
+		translate: 0 -100vh;
 		transition: all 500ms;
 		opacity: 0;
 		box-shadow: 0.1rem 0.1rem 0.5rem var(--primary-colour);

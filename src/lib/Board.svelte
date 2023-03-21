@@ -159,6 +159,12 @@
 		padding: 0.5rem 3%;
 	}
 
+	@media (max-width: 580px) {
+		.container {
+			padding: 0.5rem 0px;
+		}
+	}
+
 	.board {
 		position: relative;
 		width: 100%;

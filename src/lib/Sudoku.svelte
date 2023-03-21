@@ -165,6 +165,19 @@
 		imageSrc = event.detail.imageSrc;
 	}
 
+	function loadValues(event: any) {
+		const values = event.detail.values;
+		clearBoard();
+		grid.forEach((row, a) => {
+			row.forEach((cell, b) => {
+				grid[a][b].value = values[a][b];
+				if (grid[a][b].value > 0) {
+					grid[a][b].initialised = true;
+				}
+			});
+		});
+	}
+
 	// -----------------------------------------------------------------------------
 	// @section Functions
 	// -----------------------------------------------------------------------------
@@ -483,7 +496,7 @@
 
 			<Menu on:command={handleCommand} {show} {mode} restoreDisabled={savedGrid.length === 0} />
 
-			<Message {mode} on:image={handleImage} />
+			<Message {ROWS} {COLS} {mode} on:image={handleImage} on:load={loadValues} />
 		</div>
 	{/if}
 
