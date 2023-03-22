@@ -6,6 +6,6 @@
 	.group {
 		display: flex;
 		justify-content: flex-start;
-		align-items: center;
+		align-items: start;
 	}
 </style>

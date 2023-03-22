@@ -14,8 +14,6 @@
 	const COLS = 9;
 	const BOX = 3;
 
-	let imageSrc = '';
-
 	let ls: Storage | null;
 	let grid: Cell[][] = [];
 	let savedGrid: Cell[][] = [];
@@ -24,6 +22,7 @@
 	let show = false;
 	let help = false;
 	let selectedCell: SelectedCell;
+	let crosshairs = true;
 
 	// -----------------------------------------------------------------------------
 	// @section State handling
@@ -44,7 +43,7 @@
 		}
 	}
 
-	function setCommand(command: string) {
+	function setCommand(command: string, value: any = null) {
 		// console.log('Board: command=', command);
 		switch (command) {
 			// Menu
@@ -75,7 +74,6 @@
 				break;
 			case 'enter-value':
 				mode = Mode.EnterValue;
-				imageSrc = '';
 				break;
 			case 'pencil-in':
 				mode = Mode.PencilIn;
@@ -84,10 +82,11 @@
 			// Select mode
 			case 'select-mode-single':
 				selectMode = SelectMode.Single;
-				// clearSelections();
+				clearSelections();
 				break;
 			case 'select-mode-multiple':
 				selectMode = SelectMode.Multiple;
+				clearSelections();
 				break;
 			case 'select-mode-clear':
 				selectMode = SelectMode.Single;
@@ -98,6 +97,10 @@
 			case 'colour-3':
 			case 'colour-4':
 				handleColour(command);
+				break;
+			case 'toggle-crosshairs':
+				crosshairs = !crosshairs;
+				clearSelections();
 				break;
 
 			// Navigation
@@ -160,10 +163,6 @@
 		show = false;
 	}
 
-	function handleImage(event: any) {
-		imageSrc = event.detail.imageSrc;
-	}
-
 	function loadValues(event: any) {
 		const values = event.detail.values;
 		clearBoard();
@@ -191,12 +190,13 @@
 					row.forEach((cell, b) => {
 						grid[a][b] = {
 							value: cell.value,
-							selected: cell.selected,
+							selected: cell?.selected || false,
 							options: [...cell.options],
 							colours: [...cell.colours],
-							fixed: cell.fixed,
-							initialised: cell.initialised,
-							error: cell.error
+							fixed: cell?.fixed || false,
+							initialised: cell?.initialised || false,
+							error: cell?.error || false,
+							crosshair: cell?.crosshair || false
 						};
 					});
 				});
@@ -224,7 +224,8 @@
 					colours: [],
 					fixed: false,
 					initialised: false,
-					error: false
+					error: false,
+					crosshair: false
 				};
 			}
 		}
@@ -235,6 +236,7 @@
 			row.forEach((cell, b) => {
 				grid[a][b].colours = [];
 				grid[a][b].selected = false;
+				grid[a][b].crosshair = false;
 			});
 		});
 	}
@@ -272,6 +274,7 @@
 				grid[a][b].fixed = false;
 				grid[a][b].initialised = false;
 				grid[a][b].error = false;
+				grid[a][b].crosshair = false;
 			});
 		});
 	}
@@ -365,17 +368,23 @@
 		// console.log('setting value');
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
+				if (a === 8 && b === 7) console.log('checking cell', cell);
 				if (cell.selected && cell.fixed === false) {
-					// console.log('setting value for cell', cell);
+					console.log('setting value for cell', cell);
+
 					if (grid[a][b].value === num || num === 0) {
-						grid[a][b].value = 0;
 						if (mode === Mode.Initialise) {
+							grid[a][b].value = 0;
 							grid[a][b].initialised = false;
+						} else if (cell.initialised === false) {
+							grid[a][b].value = 0;
 						}
 					} else {
-						grid[a][b].value = num;
 						if (mode === Mode.Initialise) {
+							grid[a][b].value = num;
 							grid[a][b].initialised = true;
+						} else if (cell.initialised === false) {
+							grid[a][b].value = num;
 						}
 					}
 				}
@@ -473,16 +482,21 @@
 				{grid}
 				{mode}
 				{selectMode}
-				{imageSrc}
 				on:command={handleCommand}
 				bind:selectedCell
 			/>
 
-			<Controls {mode} {selectMode} on:command={handleCommand} on:number={handleNumber} />
+			<Controls
+				{mode}
+				{selectMode}
+				{crosshairs}
+				on:command={handleCommand}
+				on:number={handleNumber}
+			/>
 
 			<Menu on:command={handleCommand} {show} {mode} restoreDisabled={savedGrid.length === 0} />
 
-			<Initialisation {ROWS} {COLS} {mode} on:image={handleImage} on:load={loadValues} />
+			<Initialisation {ROWS} {COLS} {mode} on:load={loadValues} />
 		</div>
 	{/if}
 

@@ -84,8 +84,6 @@
 		if (event.target) {
 			const contents = event.target.result;
 			if (typeof contents === 'string') {
-				// If debugging can uncomment
-				// dispatch('image', { imageSrc: contents });
 				// Images are loaded asynchronously
 				const img = new Image();
 				img.onload = async () => {
@@ -136,7 +134,7 @@
 				</label>
 			</form>
 		{:else}
-			<div class="progress">
+			<div class="progress" class:halfway={loading > 50}>
 				Loading board from selected image file...
 				<span class="fill" style="width:{loading}%;">&nbsp;</span>
 			</div>
@@ -187,6 +185,10 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
+	}
+
+	.progress.halfway {
+		color: var(--font-colour);
 	}
 
 	.fill {

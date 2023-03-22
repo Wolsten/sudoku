@@ -23,23 +23,22 @@
 
 <style>
 	.keypad {
-		--keypad-size: 2.4rem;
+		--keypad-size: 2.6rem;
 		display: grid;
 		grid-template-columns: repeat(3, var(--keypad-size));
 		grid-template-rows: repeat(4, var(--keypad-size));
 		grid-gap: 0;
 
-		margin: 0.5rem;
+		/* margin: 0.5rem; */
 	}
 
 	button {
 		background-color: white;
-		/* padding: 0.3rem 0.6rem; */
 		border: 1px solid var(--primary-colour-lighter);
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		font-size: 1.3rem;
+		font-size: 1.4rem;
 	}
 
 	button:hover {

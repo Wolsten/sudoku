@@ -4,8 +4,10 @@
 	import Group from './Group.svelte';
 	import Choice from './Choice.svelte';
 	import Command from './Command.svelte';
+	import Toggle from './Toggle.svelte';
 
 	export let selectMode: SelectMode;
+	export let crosshairs: boolean;
 
 	const dispatch = createEventDispatcher();
 </script>
@@ -28,6 +30,17 @@
 		command="select-mode-multiple"
 		choice={SelectMode.Multiple}
 		bind:value={selectMode}
+		on:command
+	/>
+</Group>
+
+<Group>
+	<Toggle
+		name="crosshairs"
+		title="Show crosshairs for single selections"
+		label="<i class='bi bi-dpad'></i>"
+		command={'toggle-crosshairs'}
+		bind:value={crosshairs}
 		on:command
 	/>
 </Group>

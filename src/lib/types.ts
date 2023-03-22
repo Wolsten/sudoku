@@ -6,6 +6,7 @@ export type Cell = {
     selected: boolean;
     fixed: boolean;
     error: boolean;
+    crosshair: boolean;
 };
 
 export enum Mode {

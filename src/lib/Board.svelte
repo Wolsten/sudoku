@@ -11,7 +11,6 @@
 	export let COLS: number;
 	export let BOX: number;
 	export let selectedCell: SelectedCell = { row: -1, col: -1 };
-	export let imageSrc = '';
 
 	const dispatch = createEventDispatcher();
 
@@ -22,6 +21,16 @@
 	onMount(() => {
 		handleResize();
 	});
+
+	function showCrosshair(row: number, col: number) {
+		grid.forEach((r, i) => {
+			r.forEach((cell, j) => {
+				if ((row === i && col !== j) || (row !== i && col === j)) {
+					cell.crosshair = true;
+				}
+			});
+		});
+	}
 
 	function cellClicked(row: number, col: number) {
 		const clickedAt = new Date().getTime();
@@ -37,11 +46,15 @@
 		}
 		if (selectMode === SelectMode.Single) clearCellBackgrounds();
 		grid[row][col].selected = !grid[row][col].selected;
+
+		if (selectMode === SelectMode.Single && grid[row][col].selected) showCrosshair(row, col);
+
 		if (grid[row][col].selected) {
 			selectedCell = { row, col };
 		} else {
 			selectedCell = { row: -1, col: -1 };
 		}
+
 		lastClicked = clickedAt;
 		dispatch('command', { command: 'close-menu' });
 	}
@@ -56,7 +69,10 @@
 
 	function clearCellBackgrounds() {
 		grid.forEach((row) => {
-			row.forEach((cell) => (cell.selected = false));
+			row.forEach((cell) => {
+				cell.selected = false;
+				cell.crosshair = false;
+			});
 		});
 	}
 
@@ -118,10 +134,6 @@
 
 <div class="container" class:visible>
 	<div class="board" class:initialising={mode === Mode.Initialise} bind:this={board}>
-		{#if imageSrc !== '' && mode === Mode.Initialise}
-			<img src={imageSrc} />
-		{/if}
-
 		{#each grid as row, a}
 			{#each row as cell, b}
 				{@const optionsString = cell.options ? cell.options.sort((a, b) => a - b).join(' ') : ''}
@@ -137,6 +149,7 @@
 					class:initialised={cell.initialised}
 					class:error={cell.error}
 					class:coloured={cell.colours.length > 0}
+					class:crosshair={cell.crosshair}
 					{style}
 					{title}
 					on:pointerdown={() => cellClicked(a, b)}
@@ -241,6 +254,10 @@
 
 	.cell.initialised {
 		color: var(--font-colour-initialised);
+	}
+
+	.cell.crosshair {
+		background-color: var(--primary-colour-lighter);
 	}
 
 	.options {
