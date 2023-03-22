@@ -1,5 +1,5 @@
 <script lang="ts">
-	// To be extended with Tesseract:
+	// OCR implemented using the Tesseract.js library
 	// https://github.com/naptha/tesseract.js/
 	// https://blog.logrocket.com/how-to-extract-text-from-an-image-using-javascript-8fe282fb0e71/
 
@@ -56,7 +56,7 @@
 		const width = img.width / COLS;
 		const height = img.height / ROWS;
 
-		console.log('image width and height', width, height);
+		// console.log('image width and height', width, height);
 
 		const results: number[][] = [];
 
@@ -90,7 +90,7 @@
 				const img = new Image();
 				img.onload = async () => {
 					const values = await readCells(img, file);
-					console.log(values);
+					// console.log(values);
 					dispatch('load', { values });
 				};
 				img.src = contents;
@@ -102,7 +102,8 @@
 		if (event.target) {
 			const input = <HTMLInputElement>event.target;
 			if (input.files && input.files[0]) {
-				console.log('input files', input.files);
+				// console.log('input files', input.files);
+				loading = 0.1;
 				const file = input.files[0];
 				const reader = new FileReader();
 				reader.onload = async (event) => await readFile(event, file);
@@ -116,15 +117,16 @@
 	<div class="message">
 		{#if loading === 0}
 			<p>
-				Set the initial values in the puzzle and then click the <i class="bi bi-pen" /> icon above to
-				begin solving.
+				Set the initial values in the puzzle and then click the <strong
+					><i class="bi bi-pen" /></strong
+				> icon above to begin solving.
 			</p>
 
 			<p>
-				Alternatively, load a Sudoku board image and we will use OCR to automatically read the
-				values. Your image must be tightly cropped in a square with the same number of rows and
-				columns as the board above. This process may incur problems so you may need to edit the
-				board before starting to solve.
+				Or, load an image of a Sudoku puzzle which must be tightly cropped in a square with the same
+				number of rows and columns as the board above. As above, click the <strong
+					><i class="bi bi-pen" /></strong
+				> icon above to begin solving.
 			</p>
 
 			<form method="post" enctype="multipart/form-data">
@@ -180,6 +182,7 @@
 		position: relative;
 		width: 100%;
 		height: 2rem;
+		color: white;
 		background-color: var(--primary-colour-lighter);
 		display: flex;
 		justify-content: center;

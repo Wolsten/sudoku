@@ -1,0 +1,31 @@
+<IfModule mod_headers.c>
+    # Prevent click jacking attacks
+    # Ideally would set in httpd.conf but not possible in shared hosting
+    # Therefor setting here is an alternative
+    # For more info see here:
+    # https://securityheaders.io
+    # https://geekflare.com/apache-web-server-hardening-security/
+    # https://kb.sucuri.net/warnings/hardening/headers-x-content-type
+    # Nothing sensitive exposed in mimica's url but add Referrer-Policy for completeness
+    Header set X-FRAME-OPTIONS "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+    Header set X-Content-Type-Options nosniff
+    Header set Referrer-Policy no-referrer-when-downgrade
+</IfModule>
+
+
+<IfModule mod_rewrite.c>
+
+    RewriteEngine On
+
+    # Redirect all calls to use https with SSL certificate installed
+    # These two lines provided by 1and1 support
+    RewriteCond %{HTTPS} off
+    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # RewriteBase /
+    # RewriteRule ^index\.html$ - [L]
+    # RewriteCond %{REQUEST_FILENAME} !-f
+    # RewriteCond %{REQUEST_FILENAME} !-d
+    # RewriteRule . /index.html [L]
+</IfModule>

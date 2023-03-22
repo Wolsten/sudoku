@@ -7,7 +7,7 @@
 	import { Mode, SelectMode, type Cell, type SelectedCell } from './types';
 	import Command from './Command.svelte';
 	import Menu from './Menu.svelte';
-	import Message from './Message.svelte';
+	import Initialisation from './Initialisation.svelte';
 	import Help from './Help.svelte';
 
 	const ROWS = 9;
@@ -15,7 +15,7 @@
 	const BOX = 3;
 
 	let imageSrc = '';
-	let visible = false;
+
 	let ls: Storage | null;
 	let grid: Cell[][] = [];
 	let savedGrid: Cell[][] = [];
@@ -32,7 +32,6 @@
 	initialise();
 
 	onMount(() => {
-		setCellHeight();
 		typeof localStorage !== `undefined` && (ls = localStorage);
 		restoreBoard();
 	});
@@ -46,7 +45,7 @@
 	}
 
 	function setCommand(command: string) {
-		console.log('Board: command=', command);
+		// console.log('Board: command=', command);
 		switch (command) {
 			// Menu
 			case 'commands-menu':
@@ -231,20 +230,6 @@
 		}
 	}
 
-	function setCellHeight() {
-		const width = grid[0][0].dom?.clientWidth;
-		console.log('setting cell heights to ', width);
-		grid.forEach((row) => {
-			row.forEach((cell) => {
-				if (cell.dom) {
-					cell.dom.style.height = width + 'px';
-				}
-			});
-		});
-
-		visible = true;
-	}
-
 	function clearSelections() {
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
@@ -327,7 +312,7 @@
 						row1 !== row2 &&
 						grid[row1][col].value === grid[row2][col].value
 					) {
-						console.log('found column mistake in cell', row1, col);
+						// console.log('found column mistake in cell', row1, col);
 						grid[row1][col].error = true;
 					}
 				}
@@ -347,7 +332,7 @@
 									boxCol1 !== boxCol2 &&
 									grid[boxRow1][boxCol1].value === grid[boxRow2][boxCol2].value
 								) {
-									console.log('found column mistake in box', boxRow1, boxCol1);
+									// console.log('found column mistake in box', boxRow1, boxCol1);
 									grid[boxRow1][boxCol1].error = true;
 								}
 							}
@@ -361,7 +346,7 @@
 	function toggleOptions(num: number) {
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
-				if (cell.selected && cell.value === 0) {
+				if (cell.selected && cell.fixed === false && cell.value === 0) {
 					let list = cell.options;
 					if (num === 0) {
 						list = [];
@@ -377,10 +362,11 @@
 	}
 
 	function setValue(num: number) {
-		console.log('setting value');
+		// console.log('setting value');
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
-				if (cell.selected) {
+				if (cell.selected && cell.fixed === false) {
+					// console.log('setting value for cell', cell);
 					if (grid[a][b].value === num || num === 0) {
 						grid[a][b].value = 0;
 						if (mode === Mode.Initialise) {
@@ -445,7 +431,7 @@
 
 	function handleColour(colour: string) {
 		const index = parseInt(colour.split('-')[1]);
-		console.log('new colour', index);
+		// console.log('new colour', index);
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
 				if (cell.selected) {
@@ -462,9 +448,9 @@
 	}
 </script>
 
-<svelte:window on:keydown={handleKeydown} on:resize={setCellHeight} />
+<svelte:window on:keydown={handleKeydown} />
 
-<div class="container" class:visible>
+<div class="container">
 	<h1>
 		Sudoku Board
 
@@ -496,7 +482,7 @@
 
 			<Menu on:command={handleCommand} {show} {mode} restoreDisabled={savedGrid.length === 0} />
 
-			<Message {ROWS} {COLS} {mode} on:image={handleImage} on:load={loadValues} />
+			<Initialisation {ROWS} {COLS} {mode} on:image={handleImage} on:load={loadValues} />
 		</div>
 	{/if}
 
@@ -534,12 +520,6 @@
 		margin: 0 auto;
 
 		max-width: var(--max-width);
-
-		visibility: hidden;
-	}
-
-	.container.visible {
-		visibility: visible;
 	}
 
 	:global(.container *) {

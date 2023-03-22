@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, onMount } from 'svelte';
 
 	import type { Cell, SelectedCell } from './types';
 	import { Mode, SelectMode } from './types';
@@ -15,7 +15,13 @@
 
 	const dispatch = createEventDispatcher();
 
+	let board: HTMLDivElement;
 	let lastClicked = 0;
+	let visible = false;
+
+	onMount(() => {
+		handleResize();
+	});
 
 	function cellClicked(row: number, col: number) {
 		const clickedAt = new Date().getTime();
@@ -56,7 +62,7 @@
 
 	function getStyle(colours: number[]): string {
 		const width = 100 / COLS;
-		let style = `width:${width}%; height:${width}%; `;
+		let style = `width:${width}%;height:${width}%;`;
 		if (colours.length === 0) return style;
 		const inc = 360 / colours.length;
 		let angle = 0;
@@ -93,14 +99,25 @@
 		// console.log('title=', title);
 		return title;
 	}
+
+	function handleResize() {
+		if (board) {
+			const width = board.clientWidth;
+			// console.log('setting cell heights to ', width);
+			board.style.height = width + 'px';
+		}
+		visible = true;
+	}
 </script>
 
 <!------------------------------------------------------------------------------
 @section HTML
 -------------------------------------------------------------------------------->
 
-<div class="container">
-	<div class="board" class:initialising={mode === Mode.Initialise}>
+<svelte:window on:resize={handleResize} />
+
+<div class="container" class:visible>
+	<div class="board" class:initialising={mode === Mode.Initialise} bind:this={board}>
 		{#if imageSrc !== '' && mode === Mode.Initialise}
 			<img src={imageSrc} />
 		{/if}
@@ -122,7 +139,6 @@
 					class:coloured={cell.colours.length > 0}
 					{style}
 					{title}
-					bind:this={cell.dom}
 					on:pointerdown={() => cellClicked(a, b)}
 				>
 					&nbsp;
@@ -157,6 +173,10 @@
 		display: flex;
 		justify-content: center;
 		padding: 0.5rem 3%;
+	}
+
+	.container.visible {
+		visibility: visible;
 	}
 
 	@media (max-width: 580px) {

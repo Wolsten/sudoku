@@ -3,7 +3,6 @@ export type Cell = {
     value: number;
     options: number[];
     colours: number[];
-    dom?: HTMLElement;
     selected: boolean;
     fixed: boolean;
     error: boolean;

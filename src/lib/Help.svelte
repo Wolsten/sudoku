@@ -30,9 +30,7 @@
 		First set up the initial Sudoku puzzle by selecting <strong>Initialise board</strong> from the
 		drop-down menu <strong><i class="bi bi-list" /></strong>. Enter the starting values and then
 		click <strong>Solve puzzle</strong> from the drop-down menu or click the
-		<strong><i class="bi bi-pen" /></strong>
-		icon in the
-		<strong>Values</strong> panel.
+		<strong><i class="bi bi-pen" /></strong> icon in the <strong>Values</strong> panel.
 	</p>
 
 	<p>
@@ -44,6 +42,12 @@
 		narrowed down the possible values.
 	</p>
 
+	<p>
+		Or, and easier, load an image (jpeg or png) of a Sudoku puzzle which must be tightly cropped in
+		a square with the same number of rows and columns as the board above. As above, click the <i
+			class="bi bi-pen"
+		/> icon above to begin solving. There will be a short delay the first time you use this feature.
+	</p>
 	<p>
 		Values and options can be entered in single or multiple cells, depending which selection mode is
 		active, either <strong><i class="bi bi-check2" /></strong> or
@@ -71,7 +75,7 @@
 		position: absolute;
 		top: 0;
 		left: 0;
-		translate: -100vw 0;
+		translate: -100% 0;
 		transition: all 500ms;
 		opacity: 0;
 		background-color: white;
