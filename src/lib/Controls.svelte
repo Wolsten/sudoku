@@ -7,7 +7,7 @@
 
 	export let mode: Mode;
 	export let selectMode: SelectMode;
-	export let crosshairs: boolean;
+	export let crosshair: boolean;
 
 	// $: console.log('Controls:mode', mode);
 </script>
@@ -15,7 +15,6 @@
 <div class="container">
 	<div class="controls mode" title="Values">
 		<ModeController {mode} on:command />
-		<!-- <SelectModeController {selectMode} on:command /> -->
 	</div>
 
 	<div class="controls select" title="Keypad">
@@ -23,7 +22,7 @@
 	</div>
 
 	<div class="controls select" title="Selections">
-		<SelectModeController {selectMode} {crosshairs} on:command />
+		<SelectModeController {selectMode} {crosshair} on:command />
 	</div>
 </div>
 

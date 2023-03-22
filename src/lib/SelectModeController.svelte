@@ -7,7 +7,7 @@
 	import Toggle from './Toggle.svelte';
 
 	export let selectMode: SelectMode;
-	export let crosshairs: boolean;
+	export let crosshair: boolean;
 
 	const dispatch = createEventDispatcher();
 </script>
@@ -40,7 +40,7 @@
 		title="Show crosshairs for single selections"
 		label="<i class='bi bi-dpad'></i>"
 		command={'toggle-crosshairs'}
-		bind:value={crosshairs}
+		bind:value={crosshair}
 		on:command
 	/>
 </Group>

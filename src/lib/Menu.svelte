@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { fly } from 'svelte/transition';
+
 	import { Mode } from './types';
 	import MenuItem from './MenuItem.svelte';
 
@@ -18,49 +20,51 @@
 	}
 </script>
 
-<div class="commands-menu" class:show>
-	<MenuItem {title} {label} command="initialise" on:command />
+{#if show}
+	<div class="commands-menu" transition:fly={{ y: -600, duration: 1000 }}>
+		<MenuItem {title} {label} command="initialise" on:command />
 
-	<MenuItem
-		title="Highlight conflicting cells in rows, columns and boxes"
-		label="Highlight conflicts"
-		command="highlight-conflicts"
-		on:command
-	/>
+		<MenuItem
+			title="Highlight conflicting cells in rows, columns and boxes"
+			label="Highlight conflicts"
+			command="highlight-conflicts"
+			on:command
+		/>
 
-	<MenuItem
-		title="Save the current state of the board. Saved data WILL be lost if you refresh the browser window"
-		label="Save"
-		command="save"
-		on:command
-	/>
+		<MenuItem
+			title="Save the current state of the board. Saved data WILL be lost if you refresh the browser window"
+			label="Save"
+			command="save"
+			on:command
+		/>
 
-	<MenuItem
-		title="Restore the previously saved state of the board"
-		label="Restore"
-		command="restore"
-		disabled={restoreDisabled}
-		on:command
-	/>
+		<MenuItem
+			title="Restore the previously saved state of the board"
+			label="Restore"
+			command="restore"
+			disabled={restoreDisabled}
+			on:command
+		/>
 
-	<MenuItem
-		title="Restart the puzzle, retaining initial puzzle setup"
-		label="Restart"
-		command="restart"
-		on:command
-	/>
+		<MenuItem
+			title="Restart the puzzle, retaining initial puzzle setup"
+			label="Restart"
+			command="restart"
+			on:command
+		/>
 
-	<MenuItem
-		title="Clear all data on the board"
-		label="Clear board"
-		command="clear-board"
-		on:command
-	/>
+		<MenuItem
+			title="Clear all data on the board"
+			label="Clear board"
+			command="clear-board"
+			on:command
+		/>
 
-	<MenuItem title="Show user guide" label="Help" command="help" on:command />
+		<MenuItem title="Show user guide" label="Help" command="help" on:command />
 
-	<MenuItem title="Close this menu" label="Close" command="close-menu" on:command />
-</div>
+		<MenuItem title="Close this menu" label="Close" command="close-menu" on:command />
+	</div>
+{/if}
 
 <style>
 	.commands-menu {
@@ -70,15 +74,6 @@
 		width: 250px;
 		top: -1rem;
 		left: 0rem;
-		translate: 0 -100vh;
-		transition: all 500ms;
-		opacity: 0;
-		box-shadow: 0.1rem 0.1rem 0.5rem var(--primary-colour);
-	}
-
-	.show {
-		display: flex;
-		translate: 0 0;
-		opacity: 1;
+		box-shadow: var(--shadow);
 	}
 </style>

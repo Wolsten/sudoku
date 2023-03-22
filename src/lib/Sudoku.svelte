@@ -22,7 +22,7 @@
 	let show = false;
 	let help = false;
 	let selectedCell: SelectedCell;
-	let crosshairs = true;
+	let crosshair = false;
 
 	// -----------------------------------------------------------------------------
 	// @section State handling
@@ -99,7 +99,7 @@
 				handleColour(command);
 				break;
 			case 'toggle-crosshairs':
-				crosshairs = !crosshairs;
+				crosshair = !crosshair;
 				clearSelections();
 				break;
 
@@ -482,6 +482,7 @@
 				{grid}
 				{mode}
 				{selectMode}
+				{crosshair}
 				on:command={handleCommand}
 				bind:selectedCell
 			/>
@@ -489,16 +490,16 @@
 			<Controls
 				{mode}
 				{selectMode}
-				{crosshairs}
+				{crosshair}
 				on:command={handleCommand}
 				on:number={handleNumber}
 			/>
 
-			<Menu on:command={handleCommand} {show} {mode} restoreDisabled={savedGrid.length === 0} />
-
 			<Initialisation {ROWS} {COLS} {mode} on:load={loadValues} />
 		</div>
 	{/if}
+
+	<Menu on:command={handleCommand} {show} {mode} restoreDisabled={savedGrid.length === 0} />
 
 	<Help {help} on:command={handleCommand} />
 </div>
@@ -527,6 +528,8 @@
 		--border-radius: 0.3rem;
 		--max-width: 520px;
 
+		--shadow: 0.1rem 0.1rem 0.5rem var(--primary-colour);
+
 		color: var(--font-colour);
 
 		position: relative;
@@ -540,6 +543,10 @@
 		box-sizing: border-box;
 		font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode',
 			Geneva, Verdana, sans-serif;
+	}
+
+	.board-container {
+		position: relative;
 	}
 
 	h1 {

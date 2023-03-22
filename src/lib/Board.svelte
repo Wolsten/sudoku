@@ -11,6 +11,7 @@
 	export let COLS: number;
 	export let BOX: number;
 	export let selectedCell: SelectedCell = { row: -1, col: -1 };
+	export let crosshair: boolean;
 
 	const dispatch = createEventDispatcher();
 
@@ -47,7 +48,8 @@
 		if (selectMode === SelectMode.Single) clearCellBackgrounds();
 		grid[row][col].selected = !grid[row][col].selected;
 
-		if (selectMode === SelectMode.Single && grid[row][col].selected) showCrosshair(row, col);
+		if (crosshair && selectMode === SelectMode.Single && grid[row][col].selected)
+			showCrosshair(row, col);
 
 		if (grid[row][col].selected) {
 			selectedCell = { row, col };
@@ -186,9 +188,12 @@
 		display: flex;
 		justify-content: center;
 		padding: 0.5rem 3%;
+		opacity: 0;
+		transition: all 1000ms;
 	}
 
 	.container.visible {
+		opacity: 1;
 		visibility: visible;
 	}
 
@@ -313,13 +318,5 @@
 		display: flex;
 		justify-content: center;
 		align-items: center;
-	}
-
-	img {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
 	}
 </style>

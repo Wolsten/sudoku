@@ -4,6 +4,7 @@
 	// https://blog.logrocket.com/how-to-extract-text-from-an-image-using-javascript-8fe282fb0e71/
 
 	import { createEventDispatcher, onMount } from 'svelte';
+	import { fade } from 'svelte/transition';
 	import { Mode } from './types';
 
 	export let COLS: number;
@@ -112,19 +113,20 @@
 </script>
 
 {#if mode === Mode.Initialise}
-	<div class="message">
+	<div class="message" transition:fade>
 		{#if loading === 0}
+			<h2>Initialise the board</h2>
 			<p>
 				Set the initial values in the puzzle and then click the <strong
 					><i class="bi bi-pen" /></strong
-				> icon above to begin solving.
+				> icon below to begin solving.
 			</p>
 
 			<p>
-				Or, load an image of a Sudoku puzzle which must be tightly cropped in a square with the same
-				number of rows and columns as the board above. As above, click the <strong
+				Alternatively, load an image of a Sudoku puzzle. This must be tightly cropped in a square
+				with the same number of rows and columns as the board. When finished, click the <strong
 					><i class="bi bi-pen" /></strong
-				> icon above to begin solving.
+				> icon below to begin solving.
 			</p>
 
 			<form method="post" enctype="multipart/form-data">
@@ -144,12 +146,20 @@
 
 <style>
 	.message {
-		margin: 1rem 0.5rem 0 0.5rem;
+		position: absolute;
+		top: 5rem;
+		left: 5%;
+		width: 90%;
+		background-color: white;
 		text-align: center;
+		padding: 1rem 2rem 2rem 2rem;
+		border: 1px solid var(--primary-colour-lighter);
+		box-shadow: var(--shadow);
 	}
 
 	p {
 		text-align: left;
+		line-height: 1.4rem;
 	}
 
 	form {
@@ -164,6 +174,13 @@
 		padding: 0.5rem 0.8rem;
 		font-weight: bold;
 	}
+
+	i {
+		border: 1px solid var(--primary-colour-lighter);
+		border-radius: var(--border-radius);
+		padding: 0.1rem 0.2rem;
+	}
+
 	input {
 		position: absolute;
 		width: 0;
@@ -173,7 +190,8 @@
 		left: 100px;
 	}
 	label:hover {
-		border: 1px solid var(--primary-colour);
+		background-color: var(--primary-colour);
+		color: white;
 	}
 
 	.progress {
