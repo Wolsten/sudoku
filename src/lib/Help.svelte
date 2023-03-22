@@ -9,7 +9,7 @@
 </script>
 
 {#if help}
-	<div class="container" transition:fly={{ x: -600, duration: 1000 }}>
+	<div class="container" transition:fly={{ x: -600, duration: 500 }}>
 		<h2>
 			Help <div class="close">
 				<Command

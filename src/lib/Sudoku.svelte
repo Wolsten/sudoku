@@ -369,7 +369,7 @@
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
 				if (a === 8 && b === 7) console.log('checking cell', cell);
-				if (cell.selected && cell.fixed === false) {
+				if (cell.selected) {
 					console.log('setting value for cell', cell);
 
 					if (grid[a][b].value === num || num === 0) {
