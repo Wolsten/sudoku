@@ -39,6 +39,7 @@
 		justify-content: center;
 		align-items: center;
 		font-size: 1.4rem;
+		color: var(--primary-colour);
 	}
 
 	button:hover {

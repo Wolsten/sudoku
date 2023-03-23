@@ -23,9 +23,9 @@
 
 		<p>
 			This Sudoku Board provides features that make it easier to solve more complicated Sudoku
-			problems. For example, you can pencil in possible values and lock them when you have narrowed
-			down the available options. You can also highlight cells in different colours to help
-			implement logical solution strategies, such as X-wings.
+			problems. For example, to pencil in possible values and lock them when you have narrowed down
+			the available options. Also, to highlight cells in different colours to help implement logical
+			solution strategies, such as X-wings.
 		</p>
 
 		<p>
@@ -57,11 +57,13 @@
 			/> icon above to begin solving. There will be a short delay the first time you use this feature.
 		</p>
 		<p>
-			Values and options can be entered in single or multiple cells, depending which selection mode
-			is active, either <strong><i class="bi bi-check2" /></strong> or
-			<strong><i class="bi bi-check2-all" /></strong>. Any entries will toggle the those already set
-			for the selected cell(s). To clear a selected cell or cells, enter a zero, toggle the value or
-			(if on a desktop computer) select the <strong>Backspace</strong> key.
+			Enter values or options in one or more cells, depending which selection mode is active, <strong
+				><i class="bi bi-check2" /></strong
+			>
+			or <strong><i class="bi bi-check2-all" /></strong>. Any entries will toggle the those already
+			set for the selected cell(s). To clear a selected cell or cells, enter a zero, toggle the
+			value or (if on a desktop computer) select the <strong>Backspace</strong> key. On a desktop computer
+			you can also use the Shift key to toggle selection modes.
 		</p>
 
 		<p>

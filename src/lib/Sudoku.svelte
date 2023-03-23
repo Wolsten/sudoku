@@ -1,4 +1,5 @@
 <script lang="ts">
+	// https://www.sudokuwiki.org/Sudoku_Creation_and_Grading.pdf
 	import { onMount } from 'svelte';
 
 	import Controls from './Controls.svelte';
@@ -96,9 +97,18 @@
 				selectMode = SelectMode.Single;
 				clearSelections();
 				break;
+			case 'Shift':
+				if (selectMode === SelectMode.Single) {
+					selectMode = SelectMode.Multiple;
+				} else {
+					clearSelections();
+					selectMode = SelectMode.Single;
+				}
+
+				break;
 			case 'select-mode-multiple':
 				selectMode = SelectMode.Multiple;
-				clearSelections();
+				// clearSelections();
 				break;
 			case 'select-mode-clear':
 				selectMode = SelectMode.Clear;
@@ -157,6 +167,11 @@
 			case 'clear-board':
 				clearBoard();
 				break;
+			case 'random':
+				generateRandomPuzzle();
+				showInit = false;
+				mode = Mode.EnterValue;
+				break;
 		}
 		showMenu = false;
 	}
@@ -200,6 +215,136 @@
 	// -----------------------------------------------------------------------------
 	// @section Functions
 	// -----------------------------------------------------------------------------
+
+	function getRandomInt(min: number, max: number): number {
+		return Math.floor(Math.random() * (max - min + 1)) + min;
+	}
+
+	function getRandomIntFromArray(possible: number[]): number {
+		const i = getRandomInt(0, possible.length - 1);
+		return possible[i];
+	}
+
+	function generateRandomPuzzle() {
+		const MAX_ATTEMPTS = 1000;
+		let attempts = 0;
+		let finished = false;
+		let n = 0;
+		let possible: number[][] = [];
+		let backtracking = false;
+		console.log('Generating random puzzle');
+		clearBoard();
+
+		while (!finished) {
+			let row = Math.floor(n / ROWS);
+			let col = n - row * ROWS;
+			let done = false;
+			console.log(n, row, col);
+
+			if (!backtracking) {
+				possible[n] = [];
+				for (let i: number = 1; i <= COLS; i++) possible[n].push(i);
+			} else {
+				possible[n] = possible[n].filter((item) => item !== grid[row][col].value);
+				grid[row][col].value = 0;
+				if (possible[n].length === 0) {
+					n--;
+					done = true;
+				}
+			}
+
+			while (!done) {
+				attempts++;
+				if (attempts > MAX_ATTEMPTS) return;
+
+				const value = getRandomIntFromArray(possible[n]);
+
+				console.log('trying', attempts, possible[n], value);
+
+				grid[row][col].value = value;
+
+				if (showConflicts(true)) {
+					// Remove last value from the possible list
+					possible[n] = possible[n].filter((item) => item !== value);
+
+					// If run out then backtrack
+					if (possible[n].length === 0) {
+						// Set this cell to 0 and flag exit this inner loop
+						// and also to flag backtracking
+						grid[row][col].value = 0;
+						done = true;
+						backtracking = true;
+
+						// Assuming have cells left then go to the previous one
+						if (n > 0) {
+							n--;
+							row = Math.floor(n / ROWS);
+							col = n - row * ROWS;
+
+							// Run out of options
+						} else {
+							return;
+						}
+					}
+
+					// No conflicts - go onto the next cell
+				} else {
+					done = true;
+					backtracking = false;
+					n++;
+
+					// Finish if hit the last cell
+					if (n === ROWS * COLS) {
+						return;
+					}
+				}
+			}
+		}
+
+		// for (let row = 0; row < ROWS; row++) {
+		// 	for (let col = 0; col < COLS; col++) {
+		// 		let finished = false;
+		// 		let possible = [];
+		// 		for (let n = 1; n <= COLS; n++) possible.push(n);
+
+		// 		while (!finished && possible.length > 0) {
+		// 			attempts++;
+		// 			if (attempts > MAX_ATTEMPTS) return;
+
+		// 			const value = getRandomIntFromArray(possible);
+
+		// 			console.log('trying', possible, attempts, row, col, value);
+
+		// 			grid[row][col].value = value;
+
+		// 			if (showConflicts(true)) {
+		// 				if (possible.length > 0) {
+		// 					possible = possible.filter((item) => item !== grid[row][col].value);
+		// 				}
+
+		// 				// if (row === 0 && col === 0) return;
+
+		// 				if (possible.length === 0) {
+		// 					console.log('undoing cell', row, col);
+		// 					grid[row][col].value = 0;
+
+		// 					if (col > 0) {
+		// 						col--;
+		// 					} else if (row > 0) {
+		// 						row--;
+		// 						col = COLS - 1;
+		// 					}
+
+		// 					grid[row][col].value = 0;
+		// 					console.log('undoing previous cell', row, col);
+		// 				}
+		// 			} else {
+		// 				finished = true;
+		// 			}
+		// 		}
+		// 	}
+		// }
+	}
 
 	function restoreBoard() {
 		if (!!ls) {
@@ -309,9 +454,8 @@
 		});
 	}
 
-	function showConflicts() {
-		clearErrors();
-		// Rows
+	function findRowConflicts(stopOnError: boolean = false): boolean {
+		let error = false;
 		for (let row = 0; row < ROWS; row++) {
 			for (let col1 = 0; col1 < COLS; col1++) {
 				for (let col2 = 0; col2 < COLS; col2++) {
@@ -321,13 +465,21 @@
 						col1 !== col2 &&
 						grid[row][col1].value === grid[row][col2].value
 					) {
-						// console.log('found column mistake in cell', row, col1);
-						grid[row][col1].error = true;
+						error = true;
+						if (stopOnError) {
+							return true;
+						} else {
+							grid[row][col1].error = true;
+						}
 					}
 				}
 			}
 		}
-		// Columns
+		return error;
+	}
+
+	function findColConflicts(stopOnError: boolean = false): boolean {
+		let error = false;
 		for (let col = 0; col < COLS; col++) {
 			for (let row1 = 0; row1 < ROWS; row1++) {
 				for (let row2 = 0; row2 < ROWS; row2++) {
@@ -337,13 +489,21 @@
 						row1 !== row2 &&
 						grid[row1][col].value === grid[row2][col].value
 					) {
-						// console.log('found column mistake in cell', row1, col);
-						grid[row1][col].error = true;
+						error = true;
+						if (stopOnError) {
+							return true;
+						} else {
+							grid[row1][col].error = true;
+						}
 					}
 				}
 			}
 		}
-		// Boxes
+		return error;
+	}
+
+	function findBoxConflicts(stopOnError: boolean = false): boolean {
+		let error = false;
 		for (let row = 0; row < ROWS; row += BOX) {
 			for (let col = 0; col < COLS; col += BOX) {
 				for (let boxRow1 = row; boxRow1 < row + BOX; boxRow1++) {
@@ -357,8 +517,12 @@
 									boxCol1 !== boxCol2 &&
 									grid[boxRow1][boxCol1].value === grid[boxRow2][boxCol2].value
 								) {
-									// console.log('found column mistake in box', boxRow1, boxCol1);
-									grid[boxRow1][boxCol1].error = true;
+									error = true;
+									if (stopOnError) {
+										return true;
+									} else {
+										grid[boxRow1][boxCol1].error = true;
+									}
 								}
 							}
 						}
@@ -366,6 +530,18 @@
 				}
 			}
 		}
+		return error;
+	}
+
+	function showConflicts(stopOnError = false): boolean {
+		clearErrors();
+		const error1 = findRowConflicts(stopOnError);
+		if (stopOnError && error1) return true;
+		const error2 = findColConflicts(stopOnError);
+		if (stopOnError && error2) return true;
+		const error3 = findBoxConflicts(stopOnError);
+		if (stopOnError && error3) return true;
+		return error1 || error2 || error3;
 	}
 
 	function toggleOptions(num: number) {
@@ -519,7 +695,14 @@
 				on:number={handleNumber}
 			/>
 
-			<Initialisation {ROWS} {COLS} show={showInit} {mode} on:load={loadValues} />
+			<Initialisation
+				{ROWS}
+				{COLS}
+				show={showInit}
+				{mode}
+				on:load={loadValues}
+				on:command={handleCommand}
+			/>
 		</div>
 	{/if}
 

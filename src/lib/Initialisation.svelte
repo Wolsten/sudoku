@@ -16,7 +16,7 @@
 
 	let loading = 0;
 
-	$: console.log('show init', show);
+	// $: console.log('show init', show);
 
 	onMount(() => {
 		loading = 0;
@@ -79,6 +79,7 @@
 			}
 		}
 		loading = 0;
+		show = false;
 		await worker.terminate();
 		// console.log(results);
 		return results;
@@ -119,51 +120,87 @@
 
 {#if show && mode === Mode.Initialise}
 	<div class="message" transition:fade>
-		{#if loading === 0}
-			<h2>Initialise the board</h2>
-			<p>
-				Set the initial values in the puzzle and then click the <strong
-					><i class="bi bi-pen" /></strong
-				> icon below to begin solving.
-			</p>
+		<div class="inner">
+			{#if loading === 0}
+				<h2>Initialise the board</h2>
 
-			<p>
-				Alternatively, load an image of a Sudoku puzzle. This must be tightly cropped in a square
-				with the same number of rows and columns as the board. When finished, click the <strong
-					><i class="bi bi-pen" /></strong
-				> icon below to begin solving.
-			</p>
+				<h3>Option 1 - Enter puzzle starting point manually</h3>
+				<p>
+					Close this dialogue and then set the initial values in the puzzle by hand. Once you have
+					finished click the <strong><i class="bi bi-pen" /></strong> icon to begin solving.
+				</p>
 
-			<div class="container">
-				<form method="post" enctype="multipart/form-data">
-					<label for="sudoku-img"
-						>Load sudoku board image
-						<input type="file" id="sudoku-img" on:change={handleImageInput} />
-					</label>
-				</form>
+				<div class="container">
+					<button title="Close dialogue" on:click={() => (show = false)}
+						>Enter your own values</button
+					>
+				</div>
 
-				<button title="Close dialogue" on:click={() => (show = false)}>Close</button>
-			</div>
-		{:else}
-			<div class="progress" class:halfway={loading > 50}>
-				Loading board from selected image file...
-				<span class="fill" style="width:{loading}%;">&nbsp;</span>
-			</div>
-		{/if}
+				<h3>Option 2 - Load puzzle from a Sudoku board image</h3>
+				<p>
+					This must be tightly cropped in a square with the same number of rows and columns as the
+					board. The file format should be png or jpeg.
+				</p>
+
+				<div class="container">
+					<form method="post" enctype="multipart/form-data">
+						<label for="sudoku-img"
+							>Load sudoku board image
+							<input type="file" id="sudoku-img" on:change={handleImageInput} />
+						</label>
+					</form>
+				</div>
+
+				<h3>Option 3 - Generate a random puzzle</h3>
+
+				<div class="container">
+					<button
+						title="Generate a random puzzle"
+						on:click={() => {
+							show = false;
+							dispatch('command', { command: 'random' });
+						}}>Generate random puzzle</button
+					>
+				</div>
+			{:else}
+				<div class="progress" class:halfway={loading > 30}>
+					Loading board from selected image file...
+					<span class="fill" style="width:{loading}%;">&nbsp;</span>
+				</div>
+			{/if}
+		</div>
 	</div>
 {/if}
 
 <style>
 	.message {
-		position: absolute;
-		top: 5rem;
-		left: 5%;
-		width: 90%;
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(255, 255, 255, 0.8);
+
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.inner {
+		width: 80%;
 		background-color: white;
-		text-align: center;
-		padding: 1rem 2rem 2rem 2rem;
 		border: 1px solid var(--primary-colour-lighter);
 		box-shadow: var(--shadow);
+		padding: 1rem;
+	}
+
+	h2 {
+		text-align: center;
+		color: var(--primary-colour);
+	}
+
+	h3 {
+		color: var(--primary-colour);
 	}
 
 	p {
@@ -175,21 +212,26 @@
 		display: flex;
 		justify-content: space-around;
 		align-items: center;
-		padding-top: 1rem;
+		padding: 1rem;
 	}
 
 	form {
 		display: block;
 	}
 
+	button {
+		margin: 0 auto;
+	}
+
 	button,
 	label {
+		display: block;
 		position: relative;
 		background: white;
 		border: 1px solid var(--primary-colour-lighter);
 		border-radius: var(--border-radius);
 		padding: 0.5rem 0.8rem;
-		font-weight: bold;
+		font-size: 1rem;
 	}
 
 	i {
