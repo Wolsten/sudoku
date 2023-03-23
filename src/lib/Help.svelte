@@ -31,8 +31,13 @@
 		<p>
 			First set up the initial Sudoku puzzle by selecting <strong>Initialise board</strong> from the
 			drop-down menu <strong><i class="bi bi-list" /></strong>. Enter the starting values and then
-			click <strong>Solve puzzle</strong> from the drop-down menu or click the
-			<strong><i class="bi bi-pen" /></strong> icon in the <strong>Values</strong> panel.
+			click <strong>Solve puzzle</strong> from the drop-down menu or close the initialisation
+			dialogue and then click the <strong><i class="bi bi-pen" /></strong> icon in the
+			<strong>Values</strong> panel. Alternatively, click the
+			<strong>Load Sudoku board image</strong>
+			button to load an image of a Sudoku puzzle. This must be tightly cropped in a square with the same
+			number of rows and columns as the board. When finished, click the
+			<strong><i class="bi bi-pen" /></strong> icon below to begin solving.
 		</p>
 
 		<p>
@@ -40,8 +45,9 @@
 			cell(s) and then clicking a keypad number. To pencil in options for a cell, change to
 			<strong>Pencil mode <i class="bi bi-123" /></strong>. If you are using a desktop computer you
 			can enter values directly from your keyboard as well as navigate around the board using arrow
-			keys. Click the <strong>Lock <i class="bi bi-lock" /></strong> button to fix options where you
-			have narrowed down the possible values.
+			keys. Click the <strong>Lock <i class="bi bi-lock" /></strong> button to toggle locking of
+			options where you have narrowed down the possible values. On a desktop computer use the
+			<strong>l</strong> key shortcut to toggle locking on a cell or cells.
 		</p>
 
 		<p>

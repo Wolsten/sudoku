@@ -4,21 +4,21 @@ export type Cell = {
     options: number[];
     colours: number[];
     selected: boolean;
-    fixed: boolean;
+    locked: boolean;
     error: boolean;
     crosshair: boolean;
 };
 
 export enum Mode {
-    Initialise = 0,
-    EnterValue = 1,
-    PencilIn = 2
+    Initialise = 1,
+    EnterValue = 2,
+    PencilIn = 3
 }
 
 export enum SelectMode {
-    Single = 0,
-    Multiple = 1,
-    Clear = 2
+    Single = 1,
+    Multiple = 2,
+    Clear = 3
 }
 
 export type SelectedCell = {

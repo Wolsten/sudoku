@@ -46,6 +46,7 @@
 			return;
 		}
 		if (selectMode === SelectMode.Single) clearCellBackgrounds();
+
 		grid[row][col].selected = !grid[row][col].selected;
 
 		if (crosshair && selectMode === SelectMode.Single && grid[row][col].selected)
@@ -53,6 +54,7 @@
 
 		if (grid[row][col].selected) {
 			selectedCell = { row, col };
+			dispatch('command', { command: grid[row][col].locked ? 'cell-locked' : 'cell-unlocked' });
 		} else {
 			selectedCell = { row: -1, col: -1 };
 		}
@@ -108,9 +110,9 @@
 		} else {
 			if (cell.options.length > 0) {
 				title = 'This cell contains one or more pencilled options.';
-				if (cell.fixed) {
+				if (cell.locked) {
 					title +=
-						' These pencilled options have been fixed as the only possibilities in this cell.';
+						' These pencilled options have been locked as the only possibilities in this cell.';
 				}
 			}
 		}
@@ -160,7 +162,7 @@
 					{#if cell.value === 0 && optionsString !== ''}
 						<span
 							class="options"
-							class:fixed={cell.fixed}
+							class:locked={cell.locked}
 							class:busy={cell.options.length > 4}
 							class:really-busy={cell.options.length > 6}
 						>
@@ -262,7 +264,7 @@
 	}
 
 	.cell.crosshair {
-		background-color: var(--primary-colour-lighter);
+		background-color: var(--crosshair-colour);
 	}
 
 	.options {
@@ -294,7 +296,7 @@
 		}
 	}
 
-	.options.fixed {
+	.options.locked {
 		display: flex;
 		justify-content: center;
 		align-items: center;
@@ -302,7 +304,7 @@
 		font-size: 0.9rem;
 		line-height: 1rem;
 		font-weight: bold;
-		color: var(--font-colour-fixed);
+		color: var(--font-colour-locked);
 	}
 
 	.cell.coloured .options {

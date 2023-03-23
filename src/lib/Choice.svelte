@@ -4,19 +4,19 @@
 	export let title = '';
 	export let label = '';
 	export let value = 0;
-	export let choice = 0;
+	export let option = 0;
 	export let command = '';
 
 	const dispatch = createEventDispatcher();
 </script>
 
-<label {title} class:active={value === choice}>
+<label {title} class:active={value === option}>
 	<span>{@html label}</span>
 	<input
 		type="radio"
 		{name}
 		bind:group={value}
-		value={choice}
+		value={option}
 		on:click={() => dispatch('command', { command })}
 	/>
 </label>

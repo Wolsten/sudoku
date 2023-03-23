@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	export let name = '';
 	export let title = '';
 	export let label = '';
 	export let value = false;
@@ -15,7 +14,7 @@
 
 <label {title} class:active={value}>
 	<span>{@html label}</span>
-	<input type="checkbox" {name} checked={value} on:click={handleClick} />
+	<input type="checkbox" checked={value} on:click={handleClick} />
 </label>
 
 <style>

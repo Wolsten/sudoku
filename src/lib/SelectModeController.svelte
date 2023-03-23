@@ -3,7 +3,6 @@
 	import { SelectMode } from './types';
 	import Group from './Group.svelte';
 	import Choice from './Choice.svelte';
-	import Command from './Command.svelte';
 	import Toggle from './Toggle.svelte';
 
 	export let selectMode: SelectMode;
@@ -18,8 +17,8 @@
 		title="Only allow single cell selections"
 		label="<i class='bi bi-check2'></i>"
 		command="select-mode-single"
-		choice={SelectMode.Single}
-		bind:value={selectMode}
+		option={SelectMode.Single}
+		value={selectMode}
 		on:command
 	/>
 
@@ -28,34 +27,29 @@
 		title="Allow multiple cell selections and value entry plus pencil marks"
 		label="<i class='bi bi-check2-all'></i>"
 		command="select-mode-multiple"
-		choice={SelectMode.Multiple}
-		bind:value={selectMode}
+		option={SelectMode.Multiple}
+		value={selectMode}
 		on:command
 	/>
-</Group>
 
-<Group>
-	<Toggle
-		name="crosshairs"
-		title="Show crosshairs for single selections"
-		label="<i class='bi bi-dpad'></i>"
-		command={'toggle-crosshairs'}
-		bind:value={crosshair}
-		on:command
-	/>
-</Group>
-
-<Group>
-	<Command
+	<Choice
+		name="selectMode"
 		title="Clear selections"
 		label="<i class='bi bi-eraser'></i>"
 		command="select-mode-clear"
-		on:command={(event) => {
-			dispatch('command', { command: event.detail.command });
-			selectMode = SelectMode.Single;
-		}}
+		option={SelectMode.Clear}
+		value={selectMode}
+		on:command
 	/>
 </Group>
+
+<Toggle
+	title="Show crosshairs for single selections"
+	label="<i class='bi bi-dpad'></i>"
+	command={'toggle-crosshairs'}
+	bind:value={crosshair}
+	on:command
+/>
 
 <Group>
 	{#each [1, 2, 3, 4] as index}

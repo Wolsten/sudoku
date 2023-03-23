@@ -9,8 +9,9 @@
 	const dispatch = createEventDispatcher();
 
 	function handleClick() {
-		// console.log('Dispatching command', command);
-		dispatch('command', { command });
+		if (command != '') {
+			dispatch('command', { command });
+		}
 	}
 </script>
 

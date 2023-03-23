@@ -8,13 +8,12 @@
 	export let mode: Mode;
 	export let selectMode: SelectMode;
 	export let crosshair: boolean;
-
-	// $: console.log('Controls:mode', mode);
+	export let locked: boolean;
 </script>
 
 <div class="container">
 	<div class="controls mode" title="Values">
-		<ModeController {mode} on:command />
+		<ModeController {locked} {mode} on:command />
 	</div>
 
 	<div class="controls select" title="Keypad">

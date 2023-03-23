@@ -10,10 +10,13 @@
 	export let COLS: number;
 	export let ROWS: number;
 	export let mode: Mode;
+	export let show: boolean;
 
 	const dispatch = createEventDispatcher();
 
 	let loading = 0;
+
+	$: console.log('show init', show);
 
 	onMount(() => {
 		loading = 0;
@@ -112,7 +115,9 @@
 	}
 </script>
 
-{#if mode === Mode.Initialise}
+<p>Show = {show}</p>
+
+{#if show && mode === Mode.Initialise}
 	<div class="message" transition:fade>
 		{#if loading === 0}
 			<h2>Initialise the board</h2>
@@ -129,12 +134,16 @@
 				> icon below to begin solving.
 			</p>
 
-			<form method="post" enctype="multipart/form-data">
-				<label for="sudoku-img"
-					>Load sudoku board image
-					<input type="file" id="sudoku-img" on:change={handleImageInput} />
-				</label>
-			</form>
+			<div class="container">
+				<form method="post" enctype="multipart/form-data">
+					<label for="sudoku-img"
+						>Load sudoku board image
+						<input type="file" id="sudoku-img" on:change={handleImageInput} />
+					</label>
+				</form>
+
+				<button title="Close dialogue" on:click={() => (show = false)}>Close</button>
+			</div>
 		{:else}
 			<div class="progress" class:halfway={loading > 50}>
 				Loading board from selected image file...
@@ -162,13 +171,21 @@
 		line-height: 1.4rem;
 	}
 
-	form {
-		display: block;
+	.container {
+		display: flex;
+		justify-content: space-around;
+		align-items: center;
 		padding-top: 1rem;
 	}
 
+	form {
+		display: block;
+	}
+
+	button,
 	label {
 		position: relative;
+		background: white;
 		border: 1px solid var(--primary-colour-lighter);
 		border-radius: var(--border-radius);
 		padding: 0.5rem 0.8rem;
@@ -189,6 +206,7 @@
 		top: -100px;
 		left: 100px;
 	}
+	button:hover,
 	label:hover {
 		background-color: var(--primary-colour);
 		color: white;

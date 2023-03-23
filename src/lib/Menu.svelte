@@ -21,7 +21,7 @@
 </script>
 
 {#if show}
-	<div class="commands-menu" transition:fly={{ y: -600, duration: 1000 }}>
+	<div class="show-menu" transition:fly={{ y: -600, duration: 500 }}>
 		<MenuItem {title} {label} command="initialise" on:command />
 
 		<MenuItem
@@ -67,7 +67,7 @@
 {/if}
 
 <style>
-	.commands-menu {
+	.show-menu {
 		display: flex;
 		flex-direction: column;
 		position: absolute;

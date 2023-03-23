@@ -19,10 +19,12 @@
 	let savedGrid: Cell[][] = [];
 	let mode: Mode = Mode.Initialise;
 	let selectMode: SelectMode = SelectMode.Single;
-	let show = false;
+	let showMenu = false;
 	let help = false;
 	let selectedCell: SelectedCell;
 	let crosshair = false;
+	let locked = false;
+	let showInit = false;
 
 	// -----------------------------------------------------------------------------
 	// @section State handling
@@ -43,15 +45,20 @@
 		}
 	}
 
-	function setCommand(command: string, value: any = null) {
+	// When clearing selections need a delay before resetting the selection mode
+	$: if (selectMode === SelectMode.Clear) {
+		setTimeout(() => (selectMode = SelectMode.Single), 500);
+	}
+
+	function setCommand(command: string) {
 		// console.log('Board: command=', command);
 		switch (command) {
 			// Menu
-			case 'commands-menu':
-				show = !show;
+			case 'show-menu':
+				showMenu = !showMenu;
 				return;
 			case 'close-menu':
-				show = false;
+				showMenu = false;
 				return;
 
 			// Help
@@ -66,17 +73,22 @@
 			case 'initialise':
 				if (mode === Mode.Initialise) {
 					mode = Mode.EnterValue;
+					showInit = false;
 				} else {
+					showInit = true;
 					mode = Mode.Initialise;
 					clearBoard();
+					console.log('showInit', showInit);
 				}
 				selectMode = SelectMode.Single;
 				break;
 			case 'enter-value':
 				mode = Mode.EnterValue;
+				showInit = false;
 				break;
 			case 'pencil-in':
 				mode = Mode.PencilIn;
+				showInit = false;
 				break;
 
 			// Select mode
@@ -89,7 +101,7 @@
 				clearSelections();
 				break;
 			case 'select-mode-clear':
-				selectMode = SelectMode.Single;
+				selectMode = SelectMode.Clear;
 				clearSelections();
 				break;
 			case 'colour-1':
@@ -102,21 +114,30 @@
 				crosshair = !crosshair;
 				clearSelections();
 				break;
+			case 'cell-locked':
+				locked = true;
+				break;
+			case 'cell-unlocked':
+				locked = false;
+				break;
 
 			// Navigation
 			case 'ArrowLeft':
 			case 'ArrowRight':
 			case 'ArrowUp':
 			case 'ArrowDown':
-				if (selectMode === SelectMode.Single) moveSelection(command);
+				if (selectMode === SelectMode.Single) {
+					moveSelection(command);
+				}
 				break;
 			case 'Backspace':
 				clearSelectedEntries();
 				break;
 
 			// Commands
+			case 'l':
 			case 'fix-pencil-marks':
-				fixPencilMarks();
+				toggleLockedPencilMarks();
 				break;
 			case 'highlight-conflicts':
 				showConflicts();
@@ -137,7 +158,7 @@
 				clearBoard();
 				break;
 		}
-		show = false;
+		showMenu = false;
 	}
 
 	function handleCommand(event: any) {
@@ -147,7 +168,7 @@
 
 	function handleNumber(event: any) {
 		let number = event.detail.number;
-		show = false;
+		showMenu = false;
 		setNumber(number);
 	}
 
@@ -160,7 +181,7 @@
 		} else {
 			setNumber(number);
 		}
-		show = false;
+		showMenu = false;
 	}
 
 	function loadValues(event: any) {
@@ -190,13 +211,13 @@
 					row.forEach((cell, b) => {
 						grid[a][b] = {
 							value: cell.value,
-							selected: cell?.selected || false,
+							selected: false,
 							options: [...cell.options],
 							colours: [...cell.colours],
-							fixed: cell?.fixed || false,
+							locked: cell?.locked || false,
 							initialised: cell?.initialised || false,
 							error: cell?.error || false,
-							crosshair: cell?.crosshair || false
+							crosshair: false
 						};
 					});
 				});
@@ -222,7 +243,7 @@
 					selected: false,
 					options: [],
 					colours: [],
-					fixed: false,
+					locked: false,
 					initialised: false,
 					error: false,
 					crosshair: false
@@ -241,11 +262,12 @@
 		});
 	}
 
-	function fixPencilMarks() {
+	function toggleLockedPencilMarks() {
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
 				if (cell.selected) {
-					grid[a][b].fixed = !cell.fixed;
+					grid[a][b].locked = !cell.locked;
+					locked = grid[a][b].locked;
 				}
 			});
 		});
@@ -258,7 +280,7 @@
 					grid[a][b].value = 0;
 					grid[a][b].options = [];
 					grid[a][b].colours = [];
-					grid[a][b].fixed = false;
+					grid[a][b].locked = false;
 				}
 			});
 		});
@@ -271,7 +293,7 @@
 				grid[a][b].selected = false;
 				grid[a][b].options = [];
 				grid[a][b].colours = [];
-				grid[a][b].fixed = false;
+				grid[a][b].locked = false;
 				grid[a][b].initialised = false;
 				grid[a][b].error = false;
 				grid[a][b].crosshair = false;
@@ -349,7 +371,7 @@
 	function toggleOptions(num: number) {
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
-				if (cell.selected && cell.fixed === false && cell.value === 0) {
+				if (cell.selected && cell.locked === false && cell.value === 0) {
 					let list = cell.options;
 					if (num === 0) {
 						list = [];
@@ -423,6 +445,7 @@
 				break;
 		}
 		grid[selectedCell.row][selectedCell.col].selected = true;
+		locked = grid[selectedCell.row][selectedCell.col].locked;
 	}
 
 	function restart() {
@@ -432,7 +455,7 @@
 				if (cell.initialised === false) {
 					grid[a][b].value = 0;
 					grid[a][b].options = [];
-					grid[a][b].fixed = false;
+					grid[a][b].locked = false;
 				}
 			});
 		});
@@ -463,11 +486,11 @@
 	<h1>
 		Sudoku Board
 
-		<div class="menu" class:show>
+		<div class="menu" class:showMenu>
 			<Command
 				title="Menu"
 				label="<i class='bi bi-list'></i>"
-				command="commands-menu"
+				command="show-menu"
 				on:command={handleCommand}
 			/>
 		</div>
@@ -491,15 +514,30 @@
 				{mode}
 				{selectMode}
 				{crosshair}
+				{locked}
 				on:command={handleCommand}
 				on:number={handleNumber}
 			/>
 
-			<Initialisation {ROWS} {COLS} {mode} on:load={loadValues} />
+			<Initialisation {ROWS} {COLS} show={showInit} {mode} on:load={loadValues} />
 		</div>
 	{/if}
 
-	<Menu on:command={handleCommand} {show} {mode} restoreDisabled={savedGrid.length === 0} />
+	<p class="status">
+		Mode:
+		{#if mode === Mode.Initialise}
+			Initialising board
+		{:else}
+			Solving puzzle
+		{/if}
+	</p>
+
+	<Menu
+		on:command={handleCommand}
+		show={showMenu}
+		{mode}
+		restoreDisabled={savedGrid.length === 0}
+	/>
 
 	<Help {help} on:command={handleCommand} />
 </div>
@@ -510,14 +548,15 @@
 	.container {
 		/* Variables */
 		--primary-colour: rgb(109, 101, 128);
-		--primary-colour-lighter: rgb(209, 217, 230);
+		--primary-colour-lighter: rgb(230, 236, 246);
 		--select-colour: rgb(240, 240, 240);
+		--crosshair-colour: rgba(230, 236, 246, 0.5);
 
 		--font-colour: rgb(82, 80, 85);
 		--font-colour-light: rgb(125, 123, 123);
 		--font-colour-initial: rgb(245, 240, 240);
 		--font-colour-initialised: rgb(96, 115, 208);
-		--font-colour-fixed: rgb(181, 66, 133);
+		--font-colour-locked: rgb(181, 66, 133);
 		--font-colour-error: rgb(240, 61, 61);
 
 		--background-colour-1: rgb(247, 156, 156);
@@ -563,6 +602,12 @@
 		h1 {
 			font-size: 1.4rem;
 		}
+	}
+
+	.status {
+		color: var(--primary-colour);
+		background-color: var(--primary-colour-lighter);
+		padding: 0.4rem 1rem;
 	}
 
 	.menu {
