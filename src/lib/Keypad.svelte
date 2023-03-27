@@ -18,7 +18,6 @@
 	<button on:click={() => handleClick(7)}>7</button>
 	<button on:click={() => handleClick(8)}>8</button>
 	<button on:click={() => handleClick(9)}>9</button>
-	<button on:click={() => handleClick(0)}>0</button>
 </div>
 
 <style>
@@ -26,7 +25,7 @@
 		--keypad-size: 2.6rem;
 		display: grid;
 		grid-template-columns: repeat(3, var(--keypad-size));
-		grid-template-rows: repeat(4, var(--keypad-size));
+		grid-template-rows: repeat(3, var(--keypad-size));
 		grid-gap: 0;
 
 		/* margin: 0.5rem; */

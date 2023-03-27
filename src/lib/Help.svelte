@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+	// import { createEventDispatcher } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import Command from './Command.svelte';
 
 	export let help: boolean;
 
-	const dispatch = createEventDispatcher();
+	// const dispatch = createEventDispatcher();
 </script>
 
 {#if help}
@@ -30,45 +30,31 @@
 
 		<p>
 			First set up the initial Sudoku puzzle by selecting <strong>Initialise board</strong> from the
-			drop-down menu <strong><i class="bi bi-list" /></strong>. Enter the starting values and then
-			click <strong>Solve puzzle</strong> from the drop-down menu or close the initialisation
-			dialogue and then click the <strong><i class="bi bi-pen" /></strong> icon in the
-			<strong>Values</strong> panel. Alternatively, click the
+			drop-down menu <i class="bi bi-list" />. Enter the starting values and then click
+			<strong>Solve puzzle</strong>
+			from the drop-down menu or close the initialisation dialogue and then click the
+			<i class="bi bi-pen" />
+			icon at the bottom left of the window. Alternatively, click the
 			<strong>Load Sudoku board image</strong>
-			button to load an image of a Sudoku puzzle. This must be tightly cropped in a square with the same
-			number of rows and columns as the board. When finished, click the
-			<strong><i class="bi bi-pen" /></strong> icon below to begin solving.
+			button to load an image (jpeg or png) of a Sudoku puzzle. This must be tightly cropped in a square
+			with the same number of rows and columns as the board.
 		</p>
 
 		<p>
-			In <strong>Pen mode <i class="bi bi-pen" /></strong>, enter solution values by selecting
-			cell(s) and then clicking a keypad number. To pencil in options for a cell, change to
-			<strong>Pencil mode <i class="bi bi-123" /></strong>. If you are using a desktop computer you
-			can enter values directly from your keyboard as well as navigate around the board using arrow
-			keys. Click the <strong>Lock <i class="bi bi-lock" /></strong> button to toggle locking of
-			options where you have narrowed down the possible values. On a desktop computer use the
+			In Pen mode <i class="bi bi-pen" />, enter solution values by selecting cell(s) and then
+			clicking a keypad number. To pencil in options for a cell, change to Pencil mode
+			<i class="bi bi-123" />. If you are using a desktop computer you can enter values directly
+			from your keyboard as well as navigate around the board using arrow keys. Click the Lock
+			<i class="bi bi-lock" />
+			button to toggle locking of options where you have narrowed down the possible values. On a desktop
+			computer use the
 			<strong>l</strong> key shortcut to toggle locking on a cell or cells.
 		</p>
 
 		<p>
-			Or, and easier, load an image (jpeg or png) of a Sudoku puzzle which must be tightly cropped
-			in a square with the same number of rows and columns as the board above. As above, click the <i
-				class="bi bi-pen"
-			/> icon above to begin solving. There will be a short delay the first time you use this feature.
-		</p>
-		<p>
-			Enter values or options in one or more cells, depending which selection mode is active, <strong
-				><i class="bi bi-check2" /></strong
-			>
-			or <strong><i class="bi bi-check2-all" /></strong>. Any entries will toggle the those already
-			set for the selected cell(s). To clear a selected cell or cells, enter a zero, toggle the
-			value or (if on a desktop computer) select the <strong>Backspace</strong> key. On a desktop computer
-			you can also use the Shift key to toggle selection modes.
-		</p>
-
-		<p>
 			Use the colour selector to highlight selected cell or cells with the 1 to 4 colours. Like
-			entered numbers, colours toggle off those already present.
+			entered numbers, colours toggle off those already present. You can also highlight all solution
+			values set to a particular number by double clicking the number anywhere on the board.
 		</p>
 
 		<p>
@@ -99,9 +85,11 @@
 		border: 1px solid var(--primary-colour-lighter);
 		padding: 0.2rem;
 		border-radius: var(--border-radius);
+		color: var(--primary-colour);
 	}
 
 	h2 {
+		color: var(--primary-colour);
 		display: flex;
 		justify-content: space-between;
 	}

@@ -4,7 +4,8 @@
 	// https://blog.logrocket.com/how-to-extract-text-from-an-image-using-javascript-8fe282fb0e71/
 
 	import { createEventDispatcher, onMount } from 'svelte';
-	import { fade } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
+	import Command from './Command.svelte';
 	import { Mode } from './types';
 
 	export let COLS: number;
@@ -116,87 +117,79 @@
 	}
 </script>
 
-<p>Show = {show}</p>
-
 {#if show && mode === Mode.Initialise}
-	<div class="message" transition:fade>
-		<div class="inner">
-			{#if loading === 0}
-				<h2>Initialise the board</h2>
-
-				<h3>Option 1 - Enter puzzle starting point manually</h3>
-				<p>
-					Close this dialogue and then set the initial values in the puzzle by hand. Once you have
-					finished click the <strong><i class="bi bi-pen" /></strong> icon to begin solving.
-				</p>
-
-				<div class="container">
-					<button title="Close dialogue" on:click={() => (show = false)}
-						>Enter your own values</button
-					>
+	<div class="container" transition:fly={{ x: -600, duration: 500 }}>
+		{#if loading === 0}
+			<h2>
+				Initialise the board <div class="close">
+					<Command
+						title="Return to the board"
+						label="<i class='bi bi-x-lg'></i>"
+						command="close-init"
+						on:command
+					/>
 				</div>
+			</h2>
 
-				<h3>Option 2 - Load puzzle from a Sudoku board image</h3>
-				<p>
-					This must be tightly cropped in a square with the same number of rows and columns as the
-					board. The file format should be png or jpeg.
-				</p>
+			<h3>Option 1 - Enter puzzle starting point manually</h3>
+			<p>
+				Close this dialogue and then set the initial values in the puzzle by hand. Once you have
+				finished click the <strong><i class="bi bi-pen" /></strong> icon to begin solving.
+			</p>
 
-				<div class="container">
-					<form method="post" enctype="multipart/form-data">
-						<label for="sudoku-img"
-							>Load sudoku board image
-							<input type="file" id="sudoku-img" on:change={handleImageInput} />
-						</label>
-					</form>
-				</div>
+			<div class="button-container">
+				<button title="Close dialogue" on:click={() => (show = false)}>Enter your own values</button
+				>
+			</div>
 
-				<h3>Option 3 - Generate a random puzzle</h3>
+			<h3>Option 2 - Load puzzle from a Sudoku board image</h3>
+			<p>
+				This must be tightly cropped in a square with the same number of rows and columns as the
+				board. The file format should be png or jpeg.
+			</p>
 
-				<div class="container">
-					<button
-						title="Generate a random puzzle"
-						on:click={() => {
-							show = false;
-							dispatch('command', { command: 'random' });
-						}}>Generate random puzzle</button
-					>
-				</div>
-			{:else}
-				<div class="progress" class:halfway={loading > 30}>
-					Loading board from selected image file...
-					<span class="fill" style="width:{loading}%;">&nbsp;</span>
-				</div>
-			{/if}
-		</div>
+			<div class="button-container">
+				<form method="post" enctype="multipart/form-data">
+					<label for="sudoku-img"
+						>Load sudoku board image
+						<input type="file" id="sudoku-img" on:change={handleImageInput} />
+					</label>
+				</form>
+			</div>
+
+			<h3>Option 3 - Generate a random puzzle</h3>
+
+			<div class="button-container">
+				<button
+					title="Generate a random puzzle"
+					on:click={() => {
+						show = false;
+						dispatch('command', { command: 'random' });
+					}}>Generate random puzzle</button
+				>
+			</div>
+		{:else}
+			<div class="progress" class:halfway={loading > 30}>
+				Loading board from selected image file...
+				<span class="fill" style="width:{loading}%;">&nbsp;</span>
+			</div>
+		{/if}
 	</div>
 {/if}
 
 <style>
-	.message {
-		position: fixed;
+	.container {
+		padding: 1rem;
+		position: absolute;
 		top: 0;
 		left: 0;
-		width: 100%;
-		height: 100%;
-		background-color: rgba(255, 255, 255, 0.8);
-
-		display: flex;
-		justify-content: center;
-		align-items: center;
-	}
-
-	.inner {
-		width: 80%;
 		background-color: white;
-		border: 1px solid var(--primary-colour-lighter);
-		box-shadow: var(--shadow);
-		padding: 1rem;
 	}
 
 	h2 {
-		text-align: center;
 		color: var(--primary-colour);
+		display: flex;
+		justify-content: space-between;
 	}
 
 	h3 {
@@ -208,7 +201,7 @@
 		line-height: 1.4rem;
 	}
 
-	.container {
+	.button-container {
 		display: flex;
 		justify-content: space-around;
 		align-items: center;

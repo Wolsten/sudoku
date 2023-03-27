@@ -1,11 +1,15 @@
 <script lang="ts">
+	import { createEventDispatcher } from 'svelte';
 	import { Mode } from './types';
 	import Choice from './Choice.svelte';
 	import Group from './Group.svelte';
 	import Toggle from './Toggle.svelte';
+	import Command from './Command.svelte';
 
 	export let mode: Mode;
 	export let locked: boolean;
+
+	const dispatch = createEventDispatcher();
 </script>
 
 <Group>
@@ -30,7 +34,7 @@
 	/>
 </Group>
 
-<Group>
+<div>
 	<Toggle
 		title="Lock pencil marks in selected cells"
 		label="<i class='bi bi-lock'></i>"
@@ -38,4 +42,18 @@
 		value={locked}
 		on:command
 	/>
-</Group>
+
+	<Command
+		title="Delete all values or options from selected cell(s)"
+		label="<i class='bi bi-trash'></i>"
+		command="delete"
+		on:command
+	/>
+</div>
+
+<style>
+	div {
+		display: flex;
+		gap: 0.5rem;
+	}
+</style>

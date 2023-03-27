@@ -12,15 +12,17 @@
 </script>
 
 <div class="container">
-	<div class="controls mode" title="Values">
+	<div class="controls mode">
+		<!-- <h2>Values</h2> -->
 		<ModeController {locked} {mode} on:command />
 	</div>
 
-	<div class="controls select" title="Keypad">
+	<div class="controls select">
 		<Keypad on:number />
 	</div>
 
-	<div class="controls select" title="Selections">
+	<div class="controls select">
+		<!-- <h2>Selections</h2> -->
 		<SelectModeController {selectMode} {crosshair} on:command />
 	</div>
 </div>
@@ -30,30 +32,30 @@
 		display: flex;
 		justify-content: flex-start;
 		align-items: flex-start;
-		gap: 1rem;
-		padding: 0 1rem;
+		gap: 0;
 	}
 
 	.controls {
-		margin-top: 1rem;
+		margin: 0;
 		display: flex;
 		flex-wrap: wrap;
+		flex-grow: 0;
 		gap: 0.5rem;
-		justify-content: flex-start;
+		justify-content: space-between;
 		align-items: flex-start;
-		border: 1px solid var(--primary-colour-lighter);
-		border-radius: var(--border-radius);
+
 		padding: 1rem 0.5rem 0.5rem 0.5rem;
-		position: relative;
 	}
 
-	.controls::before {
-		position: absolute;
-		top: -0.8rem;
-		left: 0.5rem;
+	.controls:first-child,
+	.controls:last-child {
+		flex-grow: 2;
+	}
+
+	h2 {
+		margin: 0;
 		font-size: 0.8rem;
-		background: white;
-		padding: 0.3rem;
-		content: attr(title);
+		font-weight: normal;
+		width: 100%;
 	}
 </style>

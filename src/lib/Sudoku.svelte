@@ -91,6 +91,11 @@
 				mode = Mode.PencilIn;
 				showInit = false;
 				break;
+			case 'close-init':
+				mode = Mode.EnterValue;
+				showInit = false;
+				break;
+				'';
 
 			// Select mode
 			case 'select-mode-single':
@@ -148,6 +153,9 @@
 			case 'l':
 			case 'fix-pencil-marks':
 				toggleLockedPencilMarks();
+				break;
+			case 'delete':
+				deleteSelectedEntries();
 				break;
 			case 'highlight-conflicts':
 				showConflicts();
@@ -431,6 +439,19 @@
 		});
 	}
 
+	function deleteSelectedEntries() {
+		grid.forEach((row, a) => {
+			row.forEach((cell, b) => {
+				if (cell.selected && cell.initialised === false) {
+					grid[a][b].value = 0;
+					grid[a][b].options = [];
+					grid[a][b].colours = [];
+					grid[a][b].locked = false;
+				}
+			});
+		});
+	}
+
 	function clearBoard() {
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
@@ -694,15 +715,6 @@
 				on:command={handleCommand}
 				on:number={handleNumber}
 			/>
-
-			<Initialisation
-				{ROWS}
-				{COLS}
-				show={showInit}
-				{mode}
-				on:load={loadValues}
-				on:command={handleCommand}
-			/>
 		</div>
 	{/if}
 
@@ -720,6 +732,15 @@
 		show={showMenu}
 		{mode}
 		restoreDisabled={savedGrid.length === 0}
+	/>
+
+	<Initialisation
+		{ROWS}
+		{COLS}
+		show={showInit}
+		{mode}
+		on:load={loadValues}
+		on:command={handleCommand}
 	/>
 
 	<Help {help} on:command={handleCommand} />
@@ -791,6 +812,7 @@
 		color: var(--primary-colour);
 		background-color: var(--primary-colour-lighter);
 		padding: 0.4rem 1rem;
+		margin: 0;
 	}
 
 	.menu {
