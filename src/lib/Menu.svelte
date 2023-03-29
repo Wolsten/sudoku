@@ -22,6 +22,8 @@
 
 {#if show}
 	<div class="show-menu" transition:fly={{ y: -600, duration: 500 }}>
+		<MenuItem title="Generate random puzzle" label="Random puzzle" command="random" on:command />
+
 		<MenuItem {title} {label} command="initialise" on:command />
 
 		<MenuItem

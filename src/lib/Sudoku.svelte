@@ -233,42 +233,76 @@
 		return possible[i];
 	}
 
-	function generateRandomPuzzle() {
-		const MAX_ATTEMPTS = 1000;
+	function generateRandomSolution(): boolean {
+		const MAX_ATTEMPTS = 100000;
+		const MAX_CELLS = ROWS * COLS;
 		let attempts = 0;
-		let finished = false;
+		let finishedBoard = false;
 		let n = 0;
 		let possible: number[][] = [];
 		let backtracking = false;
-		console.log('Generating random puzzle');
-		clearBoard();
 
-		while (!finished) {
+		while (!finishedBoard) {
 			let row = Math.floor(n / ROWS);
 			let col = n - row * ROWS;
-			let done = false;
-			console.log(n, row, col);
+			let finishedCell = false;
+			// console.log(n, row, col);
 
-			if (!backtracking) {
-				possible[n] = [];
-				for (let i: number = 1; i <= COLS; i++) possible[n].push(i);
-			} else {
-				possible[n] = possible[n].filter((item) => item !== grid[row][col].value);
-				grid[row][col].value = 0;
-				if (possible[n].length === 0) {
+			if (backtracking) {
+				// Check if initialised and if so backtrack further
+				if (grid[row][col].initialised) {
 					n--;
-					done = true;
+					finishedCell = true;
+				} else {
+					// Remove the value from possibles and reset the cell
+					possible[n] = possible[n].filter((item) => item !== grid[row][col].value);
+					grid[row][col].value = 0;
+
+					// If run out of options backtrack further
+					if (possible[n].length === 0) {
+						n--;
+						finishedCell = true;
+					}
+				}
+			} else {
+				if (grid[row][col].initialised) {
+					n++;
+					finishedCell = true;
+					if (n >= MAX_CELLS) {
+						console.log('Number of attempts =', attempts);
+						finishedBoard = true;
+					}
+				} else {
+					// Initialise the full set of possible values
+					possible[n] = [];
+					for (let i: number = 1; i <= COLS; i++) {
+						possible[n].push(i);
+					}
 				}
 			}
 
-			while (!done) {
+			while (!finishedCell) {
 				attempts++;
-				if (attempts > MAX_ATTEMPTS) return;
+				if (attempts > MAX_ATTEMPTS) {
+					console.log(
+						'Number of attempts exceeded maximum attempts =',
+						attempts,
+						'at cell',
+						row,
+						col
+					);
+					return false;
+				}
 
 				const value = getRandomIntFromArray(possible[n]);
 
-				console.log('trying', attempts, possible[n], value);
-
+				// console.log('trying', attempts, possible[n], value);
+				// if (grid[row][col].initialised) {
+				// 	possible[n] = possible[n].filter((item) => item !== grid[row][col].value);
+				// 	finishedCell = true;
+				// 	backtracking = false;
+				// 	n++;
+				// } else {
 				grid[row][col].value = value;
 
 				if (showConflicts(true)) {
@@ -280,10 +314,10 @@
 						// Set this cell to 0 and flag exit this inner loop
 						// and also to flag backtracking
 						grid[row][col].value = 0;
-						done = true;
+						finishedCell = true;
 						backtracking = true;
 
-						// Assuming have cells left then go to the previous one
+						// Check not going too far back
 						if (n > 0) {
 							n--;
 							row = Math.floor(n / ROWS);
@@ -291,67 +325,72 @@
 
 							// Run out of options
 						} else {
-							return;
+							console.log('Run out of options, number of attempts =', attempts);
+							return false;
 						}
 					}
 
 					// No conflicts - go onto the next cell
 				} else {
-					done = true;
+					finishedCell = true;
 					backtracking = false;
 					n++;
 
 					// Finish if hit the last cell
-					if (n === ROWS * COLS) {
-						return;
+					if (n === MAX_CELLS) {
+						console.log('Number of attempts =', attempts);
+						finishedBoard = true;
+						return true;
 					}
+				}
+				// }
+			}
+		}
+
+		return false;
+	}
+
+	function printSolution() {
+		grid.forEach((row) => {
+			let output = '';
+			row.forEach((col) => (output = output + '  ' + col.value));
+			console.log(output);
+		});
+	}
+
+	function generateRandomPuzzle() {
+		clearBoard();
+		console.log('Generating solution');
+		if (generateRandomSolution()) {
+			printSolution();
+			console.log('Generating puzzle');
+			const GIVEN = 30;
+			for (let i = 0; i < COLS * ROWS - GIVEN; i++) {
+				let done = false;
+				while (!done) {
+					const n = getRandomInt(0, COLS * ROWS - 1);
+					const row = Math.floor(n / ROWS);
+					const col = n - row * ROWS;
+					if (grid[row][col].value > 0) {
+						grid[row][col].value = 0;
+						done = true;
+					}
+				}
+			}
+			for (let i = 0; i < COLS * ROWS; i++) {
+				const row = Math.floor(i / ROWS);
+				const col = i - row * ROWS;
+				if (grid[row][col].value > 0) {
+					grid[row][col].initialised = true;
 				}
 			}
 		}
 
-		// for (let row = 0; row < ROWS; row++) {
-		// 	for (let col = 0; col < COLS; col++) {
-		// 		let finished = false;
-		// 		let possible = [];
-		// 		for (let n = 1; n <= COLS; n++) possible.push(n);
+		printSolution();
 
-		// 		while (!finished && possible.length > 0) {
-		// 			attempts++;
-		// 			if (attempts > MAX_ATTEMPTS) return;
-
-		// 			const value = getRandomIntFromArray(possible);
-
-		// 			console.log('trying', possible, attempts, row, col, value);
-
-		// 			grid[row][col].value = value;
-
-		// 			if (showConflicts(true)) {
-		// 				if (possible.length > 0) {
-		// 					possible = possible.filter((item) => item !== grid[row][col].value);
-		// 				}
-
-		// 				// if (row === 0 && col === 0) return;
-
-		// 				if (possible.length === 0) {
-		// 					console.log('undoing cell', row, col);
-		// 					grid[row][col].value = 0;
-
-		// 					if (col > 0) {
-		// 						col--;
-		// 					} else if (row > 0) {
-		// 						row--;
-		// 						col = COLS - 1;
-		// 					}
-
-		// 					grid[row][col].value = 0;
-		// 					console.log('undoing previous cell', row, col);
-		// 				}
-		// 			} else {
-		// 				finished = true;
-		// 			}
-		// 		}
-		// 	}
-		// }
+		console.log('Testing solution');
+		generateRandomSolution();
+		printSolution();
 	}
 
 	function restoreBoard() {
@@ -587,9 +626,9 @@
 		// console.log('setting value');
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
-				if (a === 8 && b === 7) console.log('checking cell', cell);
+				// if (a === 8 && b === 7) console.log('checking cell', cell);
 				if (cell.selected) {
-					console.log('setting value for cell', cell);
+					// console.log('setting value for cell', cell);
 
 					if (grid[a][b].value === num || num === 0) {
 						if (mode === Mode.Initialise) {
@@ -820,7 +859,7 @@
 		transition: all 500ms;
 	}
 
-	.menu.show {
+	.menu.showMenu {
 		transform: rotate(-90deg);
 	}
 </style>
