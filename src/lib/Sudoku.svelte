@@ -16,6 +16,11 @@
 	const BOX = 3;
 	const BUFFER_SIZE = 5;
 
+	const MAX_ITERATIONS_SETTING = 200000;
+	const MAX_ITERATIONS_SOLVING = 200000;
+	const NUMBER_OF_GIVEN_CELLS = 28;
+	const MAX_ATTEMPTS_TO_SOLVE = 30;
+
 	let ls: Storage | null;
 	let grid: Cell[][] = [];
 	let savedGrid: Cell[][] = [];
@@ -28,6 +33,7 @@
 	let crosshair = false;
 	let locked = false;
 	let showInit = false;
+	let solutions: string[] = [];
 
 	// -----------------------------------------------------------------------------
 	// @section State handling
@@ -180,8 +186,9 @@
 			case 'clear-board':
 				clearBoard();
 				break;
+			case 'r':
 			case 'random':
-				generateRandomPuzzle();
+				findUniqueSolution();
 				showInit = false;
 				mode = Mode.EnterValue;
 				break;
@@ -256,14 +263,14 @@
 		return possible[i];
 	}
 
-	function generateRandomSolution(): boolean {
-		const MAX_ATTEMPTS = 100000;
+	function generateRandomSolution(setting = true): boolean {
 		const MAX_CELLS = ROWS * COLS;
 		let attempts = 0;
 		let finishedBoard = false;
 		let n = 0;
 		let possible: number[][] = [];
 		let backtracking = false;
+		let maxAttempts = setting ? MAX_ITERATIONS_SETTING : MAX_ITERATIONS_SOLVING;
 
 		while (!finishedBoard) {
 			let row = Math.floor(n / ROWS);
@@ -306,7 +313,7 @@
 
 			while (!finishedCell) {
 				attempts++;
-				if (attempts > MAX_ATTEMPTS) {
+				if (attempts > maxAttempts) {
 					console.log(
 						'Number of attempts exceeded maximum attempts =',
 						attempts,
@@ -373,22 +380,45 @@
 		return false;
 	}
 
-	function printSolution() {
+	function printSolution(index: number) {
+		if (index !== -1) {
+			solutions[index] = '';
+		}
 		grid.forEach((row) => {
 			let output = '';
 			row.forEach((col) => (output = output + '  ' + col.value));
 			console.log(output);
+			if (index !== -1) {
+				solutions[index] += output;
+			}
 		});
 	}
 
-	function generateRandomPuzzle() {
+	function solutionMatchesPuzzle(): boolean {
+		return solutions[0] === solutions[1];
+	}
+
+	function findUniqueSolution() {
+		let i = 0;
+		let found = false;
+		while (i < MAX_ATTEMPTS_TO_SOLVE && found === false) {
+			found = generateRandomPuzzle();
+			i++;
+		}
+		if (found) {
+			restart();
+		}
+	}
+
+	function generateRandomPuzzle(): boolean {
 		clearBoard();
-		console.log('Generating solution');
-		if (generateRandomSolution()) {
-			printSolution();
+		solutions = [];
+		console.warn('Generating solution');
+		if (generateRandomSolution(true)) {
+			printSolution(0);
 			console.log('Generating puzzle');
-			const GIVEN = 30;
-			for (let i = 0; i < COLS * ROWS - GIVEN; i++) {
+
+			for (let i = 0; i < COLS * ROWS - NUMBER_OF_GIVEN_CELLS; i++) {
 				let done = false;
 				while (!done) {
 					const n = getRandomInt(0, COLS * ROWS - 1);
@@ -409,11 +439,22 @@
 			}
 		}
 
-		printSolution();
+		printSolution(-1);
 
 		console.log('Testing solution');
-		generateRandomSolution();
-		printSolution();
+		if (generateRandomSolution(false)) {
+			printSolution(1);
+			if (solutionMatchesPuzzle()) {
+				console.log('Great, solution matches puzzle');
+				return true;
+			} else {
+				console.warn('Oops, solution does not match puzzle');
+			}
+		} else {
+			console.error('Could not find solution');
+		}
+		clearBoard();
+		return false;
 	}
 
 	function restoreBoard() {
@@ -490,18 +531,18 @@
 		});
 	}
 
-	function clearSelectedEntries() {
-		grid.forEach((row, a) => {
-			row.forEach((cell, b) => {
-				if (cell.selected && cell.initialised === false) {
-					grid[a][b].value = 0;
-					grid[a][b].options = [];
-					grid[a][b].colours = [];
-					grid[a][b].locked = false;
-				}
-			});
-		});
-	}
+	// function clearSelectedEntries() {
+	// 	grid.forEach((row, a) => {
+	// 		row.forEach((cell, b) => {
+	// 			if (cell.selected && cell.initialised === false) {
+	// 				grid[a][b].value = 0;
+	// 				grid[a][b].options = [];
+	// 				grid[a][b].colours = [];
+	// 				grid[a][b].locked = false;
+	// 			}
+	// 		});
+	// 	});
+	// }
 
 	function deleteSelectedEntries() {
 		grid.forEach((row, a) => {
