@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
 	import { Mode } from './types';
 	import Choice from './Choice.svelte';
 	import Group from './Group.svelte';
@@ -8,8 +7,7 @@
 
 	export let mode: Mode;
 	export let locked: boolean;
-
-	const dispatch = createEventDispatcher();
+	export let buffered: boolean;
 </script>
 
 <Group>
@@ -47,6 +45,14 @@
 		title="Delete all values or options from selected cell(s)"
 		label="<i class='bi bi-trash'></i>"
 		command="delete"
+		on:command
+	/>
+
+	<Command
+		title="Undo last change"
+		label="<i class='bi bi-arrow-counterclockwise'></i>"
+		command="undo"
+		disabled={!buffered}
 		on:command
 	/>
 </div>

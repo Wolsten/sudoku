@@ -14,10 +14,12 @@
 	const ROWS = 9;
 	const COLS = 9;
 	const BOX = 3;
+	const BUFFER_SIZE = 5;
 
 	let ls: Storage | null;
 	let grid: Cell[][] = [];
 	let savedGrid: Cell[][] = [];
+	let bufferGrid: Cell[][][] = [];
 	let mode: Mode = Mode.Initialise;
 	let selectMode: SelectMode = SelectMode.Single;
 	let showMenu = false;
@@ -43,6 +45,9 @@
 			setValue(n);
 		} else if (mode === Mode.PencilIn) {
 			toggleOptions(n);
+		}
+		if (mode !== Mode.Initialise) {
+			updateBuffer();
 		}
 	}
 
@@ -95,7 +100,6 @@
 				mode = Mode.EnterValue;
 				showInit = false;
 				break;
-				'';
 
 			// Select mode
 			case 'select-mode-single':
@@ -145,15 +149,13 @@
 					moveSelection(command);
 				}
 				break;
-			case 'Backspace':
-				clearSelectedEntries();
-				break;
 
 			// Commands
 			case 'l':
 			case 'fix-pencil-marks':
 				toggleLockedPencilMarks();
 				break;
+			case 'Backspace':
 			case 'delete':
 				deleteSelectedEntries();
 				break;
@@ -167,6 +169,9 @@
 			case 'restore':
 				restoreBoard();
 				selectMode = SelectMode.Single;
+				break;
+			case 'undo':
+				retrieveBuffer();
 				break;
 
 			case 'restart':
@@ -218,11 +223,29 @@
 				}
 			});
 		});
+		updateBuffer();
 	}
 
 	// -----------------------------------------------------------------------------
 	// @section Functions
 	// -----------------------------------------------------------------------------
+
+	function updateBuffer() {
+		// Create copy
+		const newEntry = structuredClone(grid);
+		bufferGrid = [...bufferGrid, newEntry];
+		if (bufferGrid.length > BUFFER_SIZE) {
+			bufferGrid = bufferGrid.slice(1);
+		}
+	}
+
+	function retrieveBuffer() {
+		if (bufferGrid.length > 1) {
+			// Create shallow copy of all bar last value
+			bufferGrid = bufferGrid.slice(0, bufferGrid.length - 1);
+			grid = bufferGrid[bufferGrid.length - 1];
+		}
+	}
 
 	function getRandomInt(min: number, max: number): number {
 		return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -415,6 +438,8 @@
 				});
 			}
 			mode = Mode.EnterValue;
+			bufferGrid = [];
+			updateBuffer();
 		}
 	}
 
@@ -482,10 +507,13 @@
 		grid.forEach((row, a) => {
 			row.forEach((cell, b) => {
 				if (cell.selected && cell.initialised === false) {
-					grid[a][b].value = 0;
-					grid[a][b].options = [];
-					grid[a][b].colours = [];
-					grid[a][b].locked = false;
+					if (mode === Mode.EnterValue) {
+						grid[a][b].value = 0;
+					} else if (mode === Mode.PencilIn) {
+						grid[a][b].options = [];
+						grid[a][b].colours = [];
+						grid[a][b].locked = false;
+					}
 				}
 			});
 		});
@@ -751,6 +779,7 @@
 				{selectMode}
 				{crosshair}
 				{locked}
+				buffered={bufferGrid.length > 1}
 				on:command={handleCommand}
 				on:number={handleNumber}
 			/>

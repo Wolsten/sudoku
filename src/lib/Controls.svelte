@@ -9,12 +9,13 @@
 	export let selectMode: SelectMode;
 	export let crosshair: boolean;
 	export let locked: boolean;
+	export let buffered: boolean;
 </script>
 
 <div class="container">
 	<div class="controls mode">
 		<!-- <h2>Values</h2> -->
-		<ModeController {locked} {mode} on:command />
+		<ModeController {locked} {mode} {buffered} on:command />
 	</div>
 
 	<div class="controls select">
