@@ -13,16 +13,19 @@
 
 	const ROWS = 9;
 	const COLS = 9;
+	const MAX_CELLS = ROWS * COLS;
 	const BOX = 3;
 	const BUFFER_SIZE = 5;
 
-	const MAX_ITERATIONS_SETTING = 200000;
-	const MAX_ITERATIONS_SOLVING = 200000;
+	const MAX_ITERATIONS_SETTING = 2000000;
+	const MAX_ITERATIONS_SOLVING = 2000000;
 	const NUMBER_OF_GIVEN_CELLS = 28;
 	const MAX_ATTEMPTS_TO_SOLVE = 30;
 
 	let ls: Storage | null;
 	let grid: Cell[][] = [];
+	// let columns: Cell[][] = [];
+	// let boxes: Cell[][] = [];
 	let savedGrid: Cell[][] = [];
 	let bufferGrid: Cell[][][] = [];
 	let mode: Mode = Mode.Initialise;
@@ -34,6 +37,7 @@
 	let locked = false;
 	let showInit = false;
 	let solutions: string[] = [];
+	let statusMessage = '';
 
 	// -----------------------------------------------------------------------------
 	// @section State handling
@@ -86,21 +90,25 @@
 				if (mode === Mode.Initialise) {
 					mode = Mode.EnterValue;
 					showInit = false;
+					statusMessage = 'Mode: Enter values to solve puzzle';
 				} else {
 					showInit = true;
 					mode = Mode.Initialise;
 					clearBoard();
 					console.log('showInit', showInit);
+					statusMessage = 'Mode: Initialising puzzle';
 				}
 				selectMode = SelectMode.Single;
 				break;
 			case 'enter-value':
 				mode = Mode.EnterValue;
 				showInit = false;
+				statusMessage = 'Mode: Enter values to solve puzzle';
 				break;
 			case 'pencil-in':
 				mode = Mode.PencilIn;
 				showInit = false;
+				statusMessage = 'Mode: Add pencil marks for possible cell values';
 				break;
 			case 'close-init':
 				mode = Mode.EnterValue;
@@ -111,18 +119,22 @@
 			case 'select-mode-single':
 				selectMode = SelectMode.Single;
 				clearSelections();
+				statusMessage = 'Selection mode: Single cells';
 				break;
 			case 'Shift':
 				if (selectMode === SelectMode.Single) {
 					selectMode = SelectMode.Multiple;
+					statusMessage = 'Selection mode: Multiple cells';
 				} else {
 					clearSelections();
 					selectMode = SelectMode.Single;
+					statusMessage = 'Selection mode: Single cells';
 				}
 
 				break;
 			case 'select-mode-multiple':
 				selectMode = SelectMode.Multiple;
+				statusMessage = 'Selection mode: Multiple cells';
 				// clearSelections();
 				break;
 			case 'select-mode-clear':
@@ -134,16 +146,20 @@
 			case 'colour-3':
 			case 'colour-4':
 				handleColour(command);
+				statusMessage = 'Coloured cell(s)';
 				break;
 			case 'toggle-crosshairs':
 				crosshair = !crosshair;
+				statusMessage = 'Toggled crosshair display';
 				clearSelections();
 				break;
 			case 'cell-locked':
+				// statusMessage = 'Locked pencil mark options';
 				locked = true;
 				break;
 			case 'cell-unlocked':
 				locked = false;
+				// statusMessage = 'Unlocked pencil mark options';
 				break;
 
 			// Navigation
@@ -160,35 +176,46 @@
 			case 'l':
 			case 'fix-pencil-marks':
 				toggleLockedPencilMarks();
+				statusMessage = 'Toggled pencil mark locking';
 				break;
 			case 'Backspace':
 			case 'delete':
 				deleteSelectedEntries();
+				statusMessage = 'Deleted cell contents';
 				break;
 			case 'highlight-conflicts':
+				statusMessage = 'Highlighted conflicting cell values';
 				showConflicts();
 				break;
 
 			case 'save':
 				saveBoard();
+				statusMessage = 'Saved board state';
 				break;
 			case 'restore':
 				restoreBoard();
 				selectMode = SelectMode.Single;
+				statusMessage = 'Restored board state';
 				break;
 			case 'undo':
 				retrieveBuffer();
+				statusMessage = 'Undid previous value or pencil mark';
 				break;
 
 			case 'restart':
 				restart();
+				statusMessage = 'Restarted puzzle';
 				break;
 			case 'clear-board':
 				clearBoard();
 				break;
 			case 'r':
 			case 'random':
-				findUniqueSolution();
+				if (generatePuzzle()) {
+					statusMessage = 'Created new puzzle';
+				} else {
+					statusMessage = 'Failed to create new puzzle - please try again';
+				}
 				showInit = false;
 				mode = Mode.EnterValue;
 				break;
@@ -263,50 +290,63 @@
 		return possible[i];
 	}
 
-	function generateRandomSolution(setting = true): boolean {
-		const MAX_CELLS = ROWS * COLS;
+	function generateASolution(setting = true): boolean {
 		let attempts = 0;
 		let finishedBoard = false;
-		let n = 0;
+		let cellIndex = 0;
 		let possible: number[][] = [];
 		let backtracking = false;
 		let maxAttempts = setting ? MAX_ITERATIONS_SETTING : MAX_ITERATIONS_SOLVING;
 
 		while (!finishedBoard) {
-			let row = Math.floor(n / ROWS);
-			let col = n - row * ROWS;
+			let row = Math.floor(cellIndex / ROWS);
+			let col = cellIndex - row * ROWS;
 			let finishedCell = false;
 			// console.log(n, row, col);
 
 			if (backtracking) {
 				// Check if initialised and if so backtrack further
+				if (grid[row] === undefined || grid[row][col] === undefined) {
+					console.error('Found undefined grid cell at', row, col, 'when n=', cellIndex);
+				}
 				if (grid[row][col].initialised) {
-					n--;
+					cellIndex--;
 					finishedCell = true;
 				} else {
 					// Remove the value from possibles and reset the cell
-					possible[n] = possible[n].filter((item) => item !== grid[row][col].value);
+					possible[cellIndex] = possible[cellIndex].filter((item) => item !== grid[row][col].value);
 					grid[row][col].value = 0;
 
 					// If run out of options backtrack further
-					if (possible[n].length === 0) {
-						n--;
+					if (possible[cellIndex].length === 0) {
+						cellIndex--;
 						finishedCell = true;
 					}
 				}
+
+				if (cellIndex < 0) {
+					console.log('Ran out of permutations attempting to backtrack past the first cell');
+					finishedBoard = true;
+				}
 			} else {
 				if (grid[row][col].initialised) {
-					n++;
+					cellIndex++;
 					finishedCell = true;
-					if (n >= MAX_CELLS) {
+					if (cellIndex >= MAX_CELLS) {
 						console.log('Number of attempts =', attempts);
 						finishedBoard = true;
 					}
 				} else {
 					// Initialise the full set of possible values
-					possible[n] = [];
+					possible[cellIndex] = [];
 					for (let i: number = 1; i <= COLS; i++) {
-						possible[n].push(i);
+						possible[cellIndex].push(i);
+					}
+					// Remove any that would clash with initialised values
+					if (setting === false) {
+						possible[cellIndex] = possible[cellIndex].filter(
+							(item) => item !== grid[row][col].value
+						);
 					}
 				}
 			}
@@ -324,7 +364,7 @@
 					return false;
 				}
 
-				const value = getRandomIntFromArray(possible[n]);
+				const value = getRandomIntFromArray(possible[cellIndex]);
 
 				// console.log('trying', attempts, possible[n], value);
 				// if (grid[row][col].initialised) {
@@ -337,10 +377,10 @@
 
 				if (showConflicts(true)) {
 					// Remove last value from the possible list
-					possible[n] = possible[n].filter((item) => item !== value);
+					possible[cellIndex] = possible[cellIndex].filter((item) => item !== value);
 
 					// If run out then backtrack
-					if (possible[n].length === 0) {
+					if (possible[cellIndex].length === 0) {
 						// Set this cell to 0 and flag exit this inner loop
 						// and also to flag backtracking
 						grid[row][col].value = 0;
@@ -348,10 +388,10 @@
 						backtracking = true;
 
 						// Check not going too far back
-						if (n > 0) {
-							n--;
-							row = Math.floor(n / ROWS);
-							col = n - row * ROWS;
+						if (cellIndex > 0) {
+							cellIndex--;
+							row = Math.floor(cellIndex / ROWS);
+							col = cellIndex - row * ROWS;
 
 							// Run out of options
 						} else {
@@ -364,10 +404,10 @@
 				} else {
 					finishedCell = true;
 					backtracking = false;
-					n++;
+					cellIndex++;
 
 					// Finish if hit the last cell
-					if (n === MAX_CELLS) {
+					if (cellIndex === MAX_CELLS) {
 						console.log('Number of attempts =', attempts);
 						finishedBoard = true;
 						return true;
@@ -398,7 +438,7 @@
 		return solutions[0] === solutions[1];
 	}
 
-	function findUniqueSolution() {
+	function generatePuzzle(): boolean {
 		let i = 0;
 		let found = false;
 		while (i < MAX_ATTEMPTS_TO_SOLVE && found === false) {
@@ -407,14 +447,47 @@
 		}
 		if (found) {
 			restart();
+			return true;
 		}
+		return false;
 	}
+
+	// function initColumnsAndBoxes() {
+	// 	columns = [];
+	// 	for (let row = 0; row < ROWS; row++) {
+	// 		for (let col = 0; col < COLS; col++) {
+	// 			if (columns[col] === undefined) {
+	// 				columns[col] = [];
+	// 			}
+	// 			columns[col][row] = grid[row][col];
+	// 		}
+	// 	}
+	// 	boxes = [];
+	// 	let rowOffset = 0;
+	// 	let colOffset = 0;
+	// 	for (let box = 0; box < ROWS; box++) {
+	// 		if (boxes[box] === undefined) {
+	// 			boxes[box] = [];
+	// 		}
+	// 		for (let r = 0; r < BOX; r++) {
+	// 			for (let c = 0; c < BOX; c++) {
+	// 				// console.log('setting box with grid row and column', box, r + rowOffset, c + colOffset);
+	// 				boxes[box].push(grid[r + rowOffset][c + colOffset]);
+	// 			}
+	// 		}
+	// 		colOffset += BOX;
+	// 		if (colOffset === BOX * BOX) {
+	// 			colOffset = 0;
+	// 			rowOffset += BOX;
+	// 		}
+	// 	}
+	// }
 
 	function generateRandomPuzzle(): boolean {
 		clearBoard();
 		solutions = [];
 		console.warn('Generating solution');
-		if (generateRandomSolution(true)) {
+		if (generateASolution(true)) {
 			printSolution(0);
 			console.log('Generating puzzle');
 
@@ -441,17 +514,27 @@
 
 		printSolution(-1);
 
+		// Copy values into columns and boxes
+		//initColumnsAndBoxes();
+
 		console.log('Testing solution');
-		if (generateRandomSolution(false)) {
-			printSolution(1);
-			if (solutionMatchesPuzzle()) {
-				console.log('Great, solution matches puzzle');
-				return true;
-			} else {
-				console.warn('Oops, solution does not match puzzle');
+		let nSolutions = 0;
+		for (let i = 0; nSolutions < 1 && i < MAX_ATTEMPTS_TO_SOLVE; i++) {
+			if (generateASolution(false)) {
+				printSolution(1);
+				if (solutionMatchesPuzzle()) {
+					console.log('Found a solution');
+					nSolutions++;
+				} else {
+					console.warn('Oops, solution does not match puzzle');
+				}
 			}
-		} else {
-			console.error('Could not find solution');
+		}
+		if (nSolutions === 0) {
+			console.error('Could not find a solution');
+		} else if (nSolutions === 1) {
+			console.log('Great, got a unique solution!');
+			return true;
 		}
 		clearBoard();
 		return false;
@@ -827,14 +910,9 @@
 		</div>
 	{/if}
 
-	<p class="status">
-		Mode:
-		{#if mode === Mode.Initialise}
-			Initialising board
-		{:else}
-			Solving puzzle
-		{/if}
-	</p>
+	{#if statusMessage}
+		<p class="status">{statusMessage}</p>
+	{/if}
 
 	<Menu
 		on:command={handleCommand}

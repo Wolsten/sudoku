@@ -52,11 +52,4 @@
 	.controls:last-child {
 		flex-grow: 2;
 	}
-
-	h2 {
-		margin: 0;
-		font-size: 0.8rem;
-		font-weight: normal;
-		width: 100%;
-	}
 </style>
